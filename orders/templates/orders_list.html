@@ -1,0 +1,290 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<style>
+    button.ui-datepicker-current {
+        display: none;
+    }
+</style>
+<h2>Orders | <span id="total_amt" style="font-size: large;">Total: {{ total }}</span></h2>
+<div class="card" style="margin-bottom: 15px;">
+    <div class="card-body">
+        <form class="row g-3" id="filter_records_form">
+            {% csrf_token %}
+            <div class="col-md-3">
+                <label for="id_start_date" class="form-label">Start Date</label>
+                {{ form.start_date }}
+            </div>
+            <div class="col-md-3">
+                <label for="id_end_date" class="form-label">End Date</label>
+                {{ form.end_date }}
+            </div>
+            <div class="col-md-3">
+                <label for="id_items" class="form-label">Rows</label>
+                {{ form.items }}
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">Update</button>
+            </div>
+            <input type="hidden" id="page_num" value="{{ page_num }}" />
+            <input type="hidden" id="num_items_for_post" value="{{ num_items }}" />
+        </form>
+    </div>
+</div>
+<table class="table table-hover {% if not orders %}d-none{% endif %}">
+    <tbody class="table-group-divider" id="orders-table">
+        {% for row in orders %}
+        <tr>
+            <td rowspan="2" class="align-middle">
+                <button class="btn btn-primary" type="button"
+                    style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem;" data-bs-toggle="collapse"
+                    data-bs-target="#collapse{{ row.pk }}" aria-expanded="false" aria-controls="collapse{{ row.pk }}">
+                    {{ row.order_timestamp }}
+                </button>
+            </td>
+            <td><b>Type:</b>&nbsp;{{ row.type }}</td>
+            <td><b>Status:</b>&nbsp;{{ row.status }}</td>
+            <td><b>Taken by:</b>&nbsp;{{ row.user }}</td>
+            <td><b>Payment method:</b>&nbsp;{{ row.payment_method }}</td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <div class="collapse" id="collapse{{ row.pk }}">
+                    <div class="card card-body">
+                        <table class="table table-sm" id="content-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Cateogry</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Price</th>
+                                    <th scope="col">Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                {% for item in row.contents %}
+                                <tr>
+                                    <td>{{ item.category }}</td>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.price }}</td>
+                                    <td>{{ item.qty }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr>
+                                    <td colspan="2" align="right">Total:</td>
+                                    <td colspan="2">{{ row.total }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div class="row" id="pagination">
+    <div class="col">
+        <nav aria-label="pagination" class="{% if total_items == 0 %}d-none{% endif %}">
+            <ul class="pagination">
+                <li class="page-item {% if page_num == 1 %} disabled {% endif %}">
+                    <a class="page-link" id="prev_page" href="#">Previous</a>
+                </li>
+                <li class="page-item {% if page_num == total_pages %} disabled {% endif %}">
+                    <a class="page-link" id="next_page" href="#">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class="col text-start {% if not orders %}d-none{% endif %}">
+        <span id="page_indicator">Page {{ page_num }} of {{ total_pages }} ({{ total_items }})</span>
+    </div>
+</div>
+<p class="{% if orders %}d-none{% endif %}" id="no_orders_msg">There are no orders on the period indicated.</p>
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    const token = $("[name=csrfmiddlewaretoken]").val();
+    function getFormInput(addToPage) {
+        var page_num = parseInt($("#page_num").val()) + addToPage;
+        if (addToPage == 0) {
+            page_num = 1;
+        }
+        return {
+            "start_date": $("#id_start_date").val(),
+            "end_date": $("#id_end_date").val(),
+            "items": $("#num_items_for_post").val(),
+            "page_num": page_num,
+        }
+    }
+    function populateData(data) {
+        $("#orders-table").empty();  // clear table contents
+        htmlStr = '';
+        contentHtmlStr = '';
+        for (let j = 0; j < data["orders"].length; j++) {
+            order = data["orders"][j];
+            pk = order["pk"];
+            type = order["type"];
+            status = order["status"];
+            user = order["user"];
+            payment_method = order["payment_method"];
+            order_ts = order["order_timestamp"];
+            total = order["total"];
+            // had trouble with this one. rows were somehow getting added in the inner table that shows the order
+            // contents. turns out .find() was getting all child elements that match the selector
+            htmlStr = '' +
+                '<tr>' +
+                '<td rowspan="2" class="align-middle">' +
+                '<button class="btn btn-primary" type="button" ' +
+                'style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem;" ' +
+                'data-bs-toggle="collapse" data-bs-target="#collapse' + pk + '" ' +
+                'aria-expanded="false" aria-controls="collapse' + pk + '">' +
+                order_ts +
+                '</button>' +
+                '</td>' +
+                '<td><b>Type:</b>&nbsp;' + type + '</td>' +
+                '<td><b>Status:</b>&nbsp;' + status + '</td>' +
+                '<td><b>Taken by:</b>&nbsp;' + user + '</td>' +
+                '<td><b>Payment method:</b>&nbsp;' + payment_method + '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td colspan="4">' +
+                '<div class="collapse" id="collapse' + pk + '">' +
+                '<div class="card card-body">' +
+                '<table class="table table-sm">' +
+                '<thead class="table-light">' +
+                '<tr>' +
+                '<th scope="col">Category</th>' +
+                '<th scope="col">Name</th>' +
+                '<th scope="col">Price</th>' +
+                '<th scope="col">Quantity</th>' +
+                '</tr>' +
+                '</thead>' +
+                '<tbody class="table-group-divider">';
+            contents = order["contents"];
+            contentHtmlStr = '';
+            for (let i = 0; i < contents.length; i++) {
+                content = contents[i];
+                contentHtmlStr += '' +
+                    '<tr>' +
+                    '<td>' + content["category"] + '</td>' +
+                    '<td>' + content["name"] + '</td>' +
+                    '<td>' + content["price"] + '</td>' +
+                    '<td>' + content["qty"] + '</td>' +
+                    '</tr>';
+            }
+            htmlStr += contentHtmlStr +
+                '<tr>' +
+                '<td colspan="2" align="right">Total:</td>' +
+                '<td colspan="2">' + total + '</td>' +
+                '</tr>' +
+                '</tbody>' +
+                '</table>' +
+                '</div>' +
+                '</div>' +
+                '</td>' +
+                '</tr>';
+            $("#orders-table").append(htmlStr);
+            htmlStr = '';
+        }
+    }
+    function pullOrders(formInput, token) {
+        $.ajax({
+            url: "{% url 'orders' %}",
+            type: "POST",
+            data: formInput,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": token,
+            },
+            success: (data) => {
+                console.log(data);
+                if (data["total_items"] != 0) {
+                    $("#orders-table").parent().removeClass("d-none");  // display if not shown
+                    // populate table
+                    populateData(data);
+                    // update page indicator
+                    $("#page_indicator").parent().removeClass("d-none");
+                    $("#page_indicator").text("Page " + data["page_num"] + " of " + data["total_pages"] + " (" + data["total_items"] + ")");
+                    // update page selector
+                    $('[aria-label="pagination"]').removeClass("d-none");
+                    if (data["page_num"] == 1) {
+                        $("#prev_page").parent().addClass("disabled");
+                    } else {
+                        $("#prev_page").parent().removeClass("disabled");
+                    }
+                    if (data["page_num"] == data["total_pages"]) {
+                        $("#next_page").parent().addClass("disabled");
+                    } else {
+                        $("#next_page").parent().removeClass("disabled");
+                    }
+                    // hide no orders msg
+                    $("#no_orders_msg").addClass("d-none");
+                    // update total amount
+                    $("#total_amt").text("Total: ".concat(data["total"]));
+                } else {
+                    // hide table
+                    $("#orders-table").parent().addClass("d-none");
+                    // hide page selector and page indicator
+                    $('[aria-label="pagination"]').addClass("d-none");
+                    $("#page_indicator").parent().addClass("d-none");
+                    // show no orders msg
+                    $("#no_orders_msg").removeClass("d-none");
+                }
+            },
+            error: (error) => {
+                console.log(error)
+            }
+        });
+    }
+    $(document).ready(function () {
+        // datepickers
+        $("#id_start_date").datepicker({
+            dateFormat: "yy-mm-dd",
+            showAnim: "fadeIn",
+            beforeShow: function () {
+                endDate = $("#id_end_date").val();
+                if (endDate != "") {
+                    $(this).datepicker("option", "maxDate", endDate);
+                } else {
+                    $(this).datepicker("option", "maxDate", null);
+                }
+            }
+        });
+        $("#id_end_date").datepicker({
+            dateFormat: "yy-mm-dd",
+            showAnim: "fadeIn",
+            beforeShow: function (input) {
+                startDate = $("#id_start_date").val();
+                if (startDate != "") {
+                    $(this).datepicker("option", "minDate", startDate);
+                }
+            },
+            showButtonPanel: true,
+            closeText: "Clear",
+            onClose: function () {
+                if ($(window.event.srcElement).hasClass('ui-datepicker-close')) {
+                    document.getElementById(this.id).value = '';
+                }
+            },
+        });
+        // events that will update table
+        $("#filter_records_form").submit(function (event) {
+            event.preventDefault();
+            $("#num_items_for_post").val($("#id_items").val())
+            pullOrders(getFormInput(0), token);
+            $("#page_num").val(1);
+        });
+        $("#prev_page").click(function (event) {
+            event.preventDefault();
+            pullOrders(getFormInput(-1), token);
+            $("#page_num").val(parseInt($("#page_num").val()) - 1);
+        });
+        $("#next_page").click(function (event) {
+            event.preventDefault();
+            pullOrders(getFormInput(1), token);
+            $("#page_num").val(parseInt($("#page_num").val()) + 1);
+        });
+    });
+</script>
+{% endblock %}

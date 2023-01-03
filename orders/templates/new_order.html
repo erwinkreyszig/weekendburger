@@ -1,0 +1,81 @@
+{% extends "base_generic.html" %}]
+
+{% block content %}
+<h2>New Order</h2>
+<hr />
+<form method="post">
+    <div class="container" style="padding-top: 20px;">
+        <div class="row">
+            {% csrf_token %}
+            <div class="col-1"></div>
+            <div class="col-3">
+                <div class="form-floating mb-3">
+                    {{ order_form.order_date }}
+                    {{ order_form.order_date.label_tag }}
+                    <span style="color:red;">{{ order_form.order_date.errors }}</span>
+                </div>
+                <div class="form-floating mb-3">
+                    {{ order_form.order_type }}
+                    {{ order_form.order_type.label_tag }}
+                    {{ order_form.order_type.errors }}
+                </div>
+                <div class="form-floating mb-3">
+                    {{ order_form.payment_option }}
+                    {{ order_form.payment_option.label_tag }}
+                    <span style="color:red;">{{ order_form.payment_option.errors }}</span>
+                </div>
+            </div>
+            <div class="col-7">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:70%;">Product</th>
+                            <th scope="col" style="width:30%;">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for ocf in order_content_formset %}
+                        <tr id="{{ form.prefix }}-row" class="oc-formset">
+                            <td>{{ ocf.product }}</td>
+                            <td>
+                                {{ ocf.qty }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {{ order_content_formset.management_form }}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-1"></div>
+        </div>
+        <div class="row">
+            <hr />
+            <div class="col-4" style="text-align: right;">
+                <input type="submit" value="Create order" class="btn btn-primary" />
+            </div>
+            <div class="col-8" style="color: red;">
+                {% if order_content_formset.non_form_errors %}
+                {% for error in order_content_formset.non_form_errors %}
+                {{ error|escape }}
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</form>
+{% load static %}
+<script src="{% static 'js/jquery.formset.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        $("#id_order_date").datepicker({
+            dateFormat: "yy-mm-dd",
+            showAnim: "fadeIn",
+            maxDate: 0,
+        })
+        $(".oc-formset").formset({
+            addText: "add",
+            deleteText: "remove",
+        });
+    });
+</script>
+{% endblock %}
