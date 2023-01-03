@@ -21,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-yp)-lh3o6fey7d8^f%+n^xifi=4q%(fol8m9+*od8f-wwwtf*y"
+SECRET_KEY = ""
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["weekendburger.pythonanywhere.com"]
 
 
 # Application definition
@@ -89,16 +89,29 @@ DATABASES = {
     }
 }
 """
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "weekend_burger",
-        "USER": "root",
-        "PASSWORD": "password",
-        "HOST": "localhost",
-        "PORT": "3306",
+is_test = False
+DATABASES = (
+    {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "weekend_burger",
+            "USER": "root",
+            "PASSWORD": "password",
+            "HOST": "localhost",
+            "PORT": "3306",
+        }
     }
-}
+    if is_test
+    else {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "weekendburger$weekendburger",
+            "USER": "weekendburger",
+            "PASSWORD": "7E0bX4ubdjZS8uj1E7",
+            "HOST": "weekendburger.mysql.pythonanywhere-services.com",
+        }
+    }
+)
 
 
 # Password validation
