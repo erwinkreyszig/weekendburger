@@ -3,12 +3,12 @@
 {% block content %}
 <h2>New Order</h2>
 <hr />
-<form method="post">
+<form method="post" id="new_order_form">
     <div class="container" style="padding-top: 20px;">
         <div class="row">
             {% csrf_token %}
             <div class="col-1"></div>
-            <div class="col-3">
+            <div class="col-2">
                 <div class="form-floating mb-3">
                     {{ order_form.order_date }}
                     {{ order_form.order_date.label_tag }}
@@ -25,24 +25,143 @@
                     <span style="color:red;">{{ order_form.payment_option.errors }}</span>
                 </div>
             </div>
-            <div class="col-7">
-                <table class="table table-hover">
+            <div class="col-4 oc-col">
+                <table class="table table-hover table-sm">
                     <thead>
                         <tr>
-                            <th scope="col" style="width:70%;">Product</th>
+                            <th scope="col" style="width:70%;">Premium Grilled Patties</th>
                             <th scope="col" style="width:30%;">Quantity</th>
                         </tr>
                     </thead>
                     <tbody class="table-group-divider">
-                        {% for ocf in order_content_formset %}
-                        <tr id="{{ form.prefix }}-row" class="oc-formset">
+                        {% for ocf in premium_patties_fs.forms %}
+                        <tr id="{{ ocf.prefix }}" class="oc-formset">
                             <td>{{ ocf.product }}</td>
-                            <td>
-                                {{ ocf.qty }}
-                            </td>
+                            <td>{{ ocf.qty }}</td>
                         </tr>
                         {% endfor %}
-                        {{ order_content_formset.management_form }}
+                        {{ premium_patties_fs.management_form }}
+                    </tbody>
+                </table>
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:70%;">Smash Burgers</th>
+                            <th scope="col" style="width:30%;">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for ocf in smash_burgers_fs.forms %}
+                        <tr id="{{ ocf.prefix }}" class="oc-formset">
+                            <td>{{ ocf.product }}</td>
+                            <td>{{ ocf.qty }}</td>
+                        </tr>
+                        {% endfor %}
+                        {{ smash_burgers_fs.management_form }}
+                    </tbody>
+                </table>
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:70%;">Chicken Burgers</th>
+                            <th scope="col" style="width:30%;">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for ocf in chicken_burgers_fs.forms %}
+                        <tr id="{{ ocf.prefix }}" class="oc-formset">
+                            <td>{{ ocf.product }}</td>
+                            <td>{{ ocf.qty }}</td>
+                        </tr>
+                        {% endfor %}
+                        {{ chicken_burgers_fs.management_form }}
+                    </tbody>
+                </table>
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:70%;">Add-ons</th>
+                            <th scope="col" style="width:30%;">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for ocf in add_ons_fs.forms %}
+                        <tr id="{{ ocf.prefix }}" class="oc-formset">
+                            <td>{{ ocf.product }}</td>
+                            <td>{{ ocf.qty }}</td>
+                        </tr>
+                        {% endfor %}
+                        {{ add_ons_fs.management_form }}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-4 oc-col">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:70%;">Sides</th>
+                            <th scope="col" style="width:30%;">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for ocf in sides_fs.forms %}
+                        <tr id="{{ ocf.prefix }}" class="oc-formset">
+                            <td>{{ ocf.product }}</td>
+                            <td>{{ ocf.qty }}</td>
+                        </tr>
+                        {% endfor %}
+                        {{ sides_fs.management_form }}
+                    </tbody>
+                </table>
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:70%;">Rice Meals</th>
+                            <th scope="col" style="width:30%;">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for ocf in rice_meals_fs.forms %}
+                        <tr id="{{ ocf.prefix }}" class="oc-formset">
+                            <td>{{ ocf.product }}</td>
+                            <td>{{ ocf.qty }}</td>
+                        </tr>
+                        {% endfor %}
+                        {{ rice_meals_fs.management_form }}
+                    </tbody>
+                </table>
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:70%;">Pancakes</th>
+                            <th scope="col" style="width:30%;">Quatity</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for ocf in pancakes_fs.forms %}
+                        <tr id="{{ ocf.prefix }}" class="oc-formset">
+                            <td>{{ ocf.product }}</td>
+                            <td>{{ ocf.qty }}</td>
+                        </tr>
+                        {% endfor %}
+                        {{ pancakes_fs.management_form }}
+                    </tbody>
+                </table>
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:70%;">Drinks</th>
+                            <th scope="col" style="width:30%;">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for ocf in drinks_fs.forms %}
+                        <tr id="{{ ocf.prefix }}" class="oc-formset">
+                            <td>{{ ocf.product }}</td>
+                            <td>{{ ocf.qty }}</td>
+                        </tr>
+                        {% endfor %}
+                        {{ drinks_fs.management_form }}
                     </tbody>
                 </table>
             </div>
@@ -53,28 +172,328 @@
             <div class="col-4" style="text-align: right;">
                 <input type="submit" value="Create order" class="btn btn-primary" />
             </div>
-            <div class="col-8" style="color: red;">
-                {% if order_content_formset.non_form_errors %}
-                {% for error in order_content_formset.non_form_errors %}
-                {{ error|escape }}
-                {% endfor %}
+            <div class="col-8" style="color: red;" id="error_msg">
+                <!-- error messages returned by POST -->
+                {% if premium_patties_fs.non_form_errors or smash_burgers_fs.non_form_errors or chicken_burgers_fs.non_form_errors or add_ons_fs.non_form_errors or sides_fs.non_form_errors or rice_meals_fs.non_form_errors or pancakes_fs.non_form_errors or drinks_fs.non_form_errors %}
+                    <strong>Please fix the following errors:</strong><br />
+                {% endif %}
+                {% if premium_patties_fs.non_form_errors %}
+                    {% for error in premium_patties_fs.non_form_errors %}
+                        {{ error|escape }}<br />
+                    {% endfor %}
+                {% endif %}
+                {% if smash_burgers_fs.non_form_errors %}
+                    {% for error in smash_burgers_fs.non_form_errors %}
+                        {{ error|escape }}<br />
+                    {% endfor %}
+                {% endif %}
+                {% if chicken_burgers_fs.non_form_errors %}
+                    {% for error in chicken_burgers_fs.non_form_errors %}
+                       {{ error|escape }}<br />
+                    {% endfor %}
+                {% endif %}
+                {% if add_ons_fs.non_form_errors %}
+                    {% for error in add_ons_fs.non_form_errors %}
+                        {{ error|escape }}<br />
+                    {% endfor %}
+                {% endif %}
+                {% if sides_fs.non_form_errors %}
+                    {% for error in sides_fs.non_form_errors %}
+                       {{ error|escape }}<br />
+                    {% endfor %}
+                {% endif %}
+                {% if rice_meals_fs.non_form_errors %}
+                    {% for error in rice_meals_fs.non_form_errors %}
+                        {{ error|escape }}<br />
+                    {% endfor %}
+                {% endif %}
+                {% if pancakes_fs.non_form_errors %}
+                    {% for error in pancakes_fs.non_form_errors %}
+                        {{ error|escape }}<br />
+                    {% endfor %}
+                {% endif %}
+                {% if drinks_fs.non_form_errors %}
+                    {% for error in drinks_fs.non_form_errors %}
+                        {{ error|escape }}<br />
+                    {% endfor %}
                 {% endif %}
             </div>
         </div>
     </div>
 </form>
+<!-- confirmation modal -->
+<div class="modal fade" id="orderConfirmModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="orderConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="orderConfirmModalLabel">Order Confirmation</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-sm" id="order_info_summary">
+                    <tbody>
+                        <tr>
+                            <td>Order Date:</td>
+                            <td id="order_info_summary_date"></td>
+                        </tr>
+                        <tr>
+                            <td>Type:</td>
+                            <td id="order_info_summary_type"></td>
+                        </tr>
+                        <tr>
+                            <td>Payment Option:</td>
+                            <td id="order_info_summary_payment"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class="table table-hover table-sm" id="order_content_summary">
+                    <thead>
+                        <tr>
+                            <th scope="col">Product</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <span id="confirmMsg" class="d-none"></span>
+                <button type="button" class="btn btn-secondary" id="closeConfirmBtn">Close</button>
+                <button type="button" class="btn btn-primary" id="proceedOrderBtn">Create</button>
+                <button type="button" class="btn btn-secondary d-none" id="printOrderBtn">Print</button>
+            </div>
+        </div>
+    </div>
+</div>
+  
 {% load static %}
 <script src="{% static 'js/jquery.formset.js' %}"></script>
 <script>
     $(document).ready(function () {
+        // get current product prices
+        products_data = null;
+        $.ajax({
+            url: "{% url 'product-prices' %}",
+            type: "GET",
+            dataType: "json",
+            success: (data) => {
+                products_data = data;
+            },
+            error: (error) => {
+                console.log(error);
+            }
+        });
         $("#id_order_date").datepicker({
             dateFormat: "yy-mm-dd",
             showAnim: "fadeIn",
             maxDate: 0,
         })
-        $(".oc-formset").formset({
+        $("#pp-0").formset({
             addText: "add",
             deleteText: "remove",
+            formCssClass: "pp-cls",
+            prefix: "{{ premium_patties_fs.prefix }}",
+        });
+        $("#cb-0").formset({
+            addText: "add",
+            deleteText: "remove",
+            formCssClass: "cb-cls",
+            prefix: "{{ chicken_burgers_fs.prefix }}",
+        });
+        $("#sb-0").formset({
+            addText: "add",
+            deleteText: "remove",
+            formCssClass: "sb-cls",
+            prefix: "{{ smash_burgers_fs.prefix }}",
+        });
+        $("#dr-0").formset({
+            addText: "add",
+            deleteText: "remove",
+            formCssClass: "dr-cls",
+            prefix: "{{ drinks_fs.prefix }}",
+        });
+        $("#pa-0").formset({
+            addText: "add",
+            deleteText: "remove",
+            formCssClass: "pa-cls",
+            prefix: "{{ pancakes_fs.prefix }}",
+        });
+        $("#rm-0").formset({
+            addText: "add",
+            deleteText: "remove",
+            formCssClass: "rm-cls",
+            prefix: "{{ rice_meals_fs.prefix }}",
+        });
+        $("#si-0").formset({
+            addText: "add",
+            deleteText: "remove",
+            formCssClass: "si-cls",
+            prefix: "{{ sides_fs.prefix }}",
+        });
+        $("#ao-0").formset({
+            addText: "add",
+            deleteText: "remove",
+            formCssClass: "ao-cls",
+            prefix: "{{ add_ons_fs.prefix }}",
+        });
+        $("#new_order_form").submit(function (event, options) {
+            event.preventDefault();
+            options = options || {};
+            if (!options.input_check_complete) {
+                // check if all inputs are blank
+                isEmpty = true;
+                qtyErrors = []
+                $(".oc-formset").each(function () {
+                    if ($(this).find("select").val() != "") {
+                        isEmpty = false;
+                        categ = $(this).find("input").attr("categ");
+                        qty = parseInt($(this).find("input").val());
+                        if (isNaN(qty) || (!isNaN(qty) && qty < 1)) {
+                            qtyErrors.push("One or more items under <u>" + categ + "</u> have an invalid quantity.");
+                        }
+                    } else {
+                        $(this).find("input").val("");
+                    }
+                });
+                if (isEmpty) {
+                    $("#error_msg").empty().html("<strong>Please fix the following errors:</strong><br />There is no product selected.");
+                    return;
+                }
+                if (qtyErrors.length != 0) {
+                    $("#error_msg").empty().html("<strong>Please fix the following errors:</strong><br />");
+                    for (i = 0; i < qtyErrors.length; i++) {
+                        $("#error_msg").append(qtyErrors[i] + "<br />");
+                    }
+                    return;
+                }
+                // pop out modal here
+                $("#order_info_summary_date").text($("#id_order_date").val());
+                $("#order_info_summary_type").text($("#id_order_type option:selected").text());
+                $("#order_info_summary_payment").text($("#id_payment_option option:selected").text());
+                // aggregate orders to display
+                grand_total = 0;
+                pp_summary = {};  // premium patties
+                $(".pp-cls").each(function () {
+                    product = $(this).find("select").val();
+                    qty = parseInt($(this).find("input").val());
+                    if (product != "") {
+                        pp_summary[product] = (pp_summary[product] || 0) + qty;
+                    }
+                });
+                sb_summary = {};  // smash burgers
+                $(".sb-cls").each(function () {
+                    product = $(this).find("select").val();
+                    qty = parseInt($(this).find("input").val());
+                    if (product != "") {
+                        sb_summary[product] = (sb_summary[product] || 0) + qty;
+                    }
+                });
+                cb_summary = {};  // chicken burgers
+                $(".cb-cls").each(function () {
+                    product = $(this).find("select").val();
+                    qty = parseInt($(this).find("input").val());
+                    if (product != "") {
+                        cb_summary[product] = (cb_summary[product] || 0) + qty;
+                    }
+                });
+                ao_summary = {};  // add-ons
+                $(".ao-cls").each(function () {
+                    product = $(this).find("select").val();
+                    qty = parseInt($(this).find("input").val());
+                    if (product != "") {
+                        ao_summary[product] = (ao_summary[product] || 0) + qty;
+                    }
+                });
+                si_summary = {};  //  sides
+                $(".si-cls").each(function () {
+                    product = $(this).find("select").val();
+                    qty = parseInt($(this).find("input").val());
+                    if (product != "") {
+                        si_summary[product] = (si_summary[product] || 0) + qty;
+                    }
+                });
+                rm_summary = {};  //  rice meals
+                $(".rm-cls").each(function () {
+                    product = $(this).find("select").val();
+                    qty = parseInt($(this).find("input").val());
+                    if (product != "") {
+                        rm_summary[product] = (rm_summary[product] || 0) + qty;
+                    }
+                });
+                pa_summary = {};  //  pancakes
+                $(".pa-cls").each(function () {
+                    product = $(this).find("select").val();
+                    qty = parseInt($(this).find("input").val());
+                    if (product != "") {
+                        pa_summary[product] = (pa_summary[product] || 0) + qty;
+                    }
+                });
+                dr_summary = {};  //  drinks
+                $(".dr-cls").each(function () {
+                    product = $(this).find("select").val();
+                    qty = parseInt($(this).find("input").val());
+                    if (product != "") {
+                        dr_summary[product] = (dr_summary[product] || 0) + qty;
+                    }
+                });
+                collected = [pp_summary, sb_summary, cb_summary, ao_summary, si_summary, rm_summary, pa_summary, dr_summary];
+                $("#order_content_summary tbody").empty();
+                for (i = 0; i < collected.length; i++) {
+                    for (item in collected[i]) {
+                        r_name = products_data.names[item];
+                        r_price = products_data.prices[item];
+                        r_qty = collected[i][item];
+                        r_total = r_price * r_qty;
+                        grand_total += r_total;
+                        $("#order_content_summary tbody").append("" + 
+                            "<tr>" +
+                                "<td>" + r_name + "</td>" +
+                                "<td>" + r_price + "</td>" +
+                                "<td>" + r_qty + "</td>" +
+                                "<td>" + r_total + "</td>" +
+                            "</tr>");
+                    }                    
+                }
+                $("#order_content_summary tbody").append("" +
+                    "<tr>" +
+                        "<td colspan='3' style='text-align:right;'>Total</td>" +
+                        "<td>" + grand_total + "</td>" +
+                    "</tr>");
+                $("#orderConfirmModal").modal("show");
+                $("#closeConfirmBtn").click(function () {
+                    $("#orderConfirmModal").modal("hide");
+                    $("#proceedOrderBtn").unbind("click");
+                });
+                $("#proceedOrderBtn").click(function (event) {
+                    $("#new_order_form").trigger("submit", {"input_check_complete": true});
+                });
+            } else {
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'new-order' %}",
+                    data: $(this).serialize(),
+                    success: (data) => {
+                        if (data.saved) {
+                            $("#confirmMsg").removeClass("d-none").text("Order saved.");
+                            $("#proceedOrderBtn").addClass("d-none").unbind("click");
+                            $("#printOrderBtn").removeClass("d-none").bind("click", function (event) {
+                                window.open("{% url 'print-order' %}".concat(data.ref)).focus();
+                            });
+                            // reset page when Close is clicked
+                            $("#closeConfirmBtn").click(function (event) {
+                                window.location.reload(true);
+                            });
+                        }
+                    },
+                    error: (error) => {
+                        console.log(error);
+                    }
+                });
+            }          
         });
     });
 </script>

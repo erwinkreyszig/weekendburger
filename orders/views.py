@@ -9,8 +9,27 @@ from django.forms.formsets import formset_factory
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
-from .forms import OrderForm, OrderContentForm, BaseOrderContentFormSet, OrderRangeForm
-from .models import Order, OrderContent
+from .forms import (
+    OrderRangeForm,
+    OrderForm,
+    PremiumPattiesOrderContentForm,
+    ChickenBurgersOrderContentForm,
+    SmashBurgersOrderContentForm,
+    DrinksOrderContentForm,
+    PancakesOrderContentForm,
+    RiceMealsOrderContentForm,
+    SidesOrderContentFom,
+    AddOnsOrderContentForm,
+    PremiumPattiesOrderContentFormSet,
+    ChickenBurgersOrderContentFormSet,
+    SmashBurgersOrderContentFormSet,
+    DrinksOrderContentFormSet,
+    PancakesOrderContentFormSet,
+    RiceMealsOrderContentFormSet,
+    SidesOrderContentFormSet,
+    AddOnsOrderContentFormSet,
+)
+from .models import Order, OrderContent, Product
 
 # Create your views here.
 
@@ -132,15 +151,45 @@ def order_list(request):
 
 @login_required
 def create_order(request):
-    OrderContentFormset = formset_factory(OrderContentForm, formset=BaseOrderContentFormSet, extra=1)
+    PremiumPattiesFS = formset_factory(
+        PremiumPattiesOrderContentForm, formset=PremiumPattiesOrderContentFormSet, extra=1
+    )
+    ChickenBurgersFS = formset_factory(
+        ChickenBurgersOrderContentForm, formset=ChickenBurgersOrderContentFormSet, extra=1
+    )
+    SmashBurgersFS = formset_factory(SmashBurgersOrderContentForm, formset=SmashBurgersOrderContentFormSet, extra=1)
+    DrinksFS = formset_factory(DrinksOrderContentForm, formset=DrinksOrderContentFormSet, extra=1)
+    PancakesFS = formset_factory(PancakesOrderContentForm, formset=PancakesOrderContentFormSet, extra=1)
+    RiceMealsFS = formset_factory(RiceMealsOrderContentForm, formset=RiceMealsOrderContentFormSet, extra=1)
+    SidesFS = formset_factory(SidesOrderContentFom, formset=SidesOrderContentFormSet, extra=1)
+    AddOnsFS = formset_factory(AddOnsOrderContentForm, formset=AddOnsOrderContentFormSet, extra=1)
 
     if request.method == "POST":
         ORDER_STATUS_FIXED_TMP = "pa"  # hardcode this for now
         now = timezone.now()
         order_form = OrderForm(request.POST)
-        order_content_formset = OrderContentFormset(request.POST)
+        premium_patties_fs = PremiumPattiesFS(request.POST, prefix="pp")
+        chicken_burgers_fs = ChickenBurgersFS(request.POST, prefix="cb")
+        smash_burgers_fs = SmashBurgersFS(request.POST, prefix="sb")
+        drinks_fs = DrinksFS(request.POST, prefix="dr")
+        pancakes_fs = PancakesFS(request.POST, prefix="pa")
+        rice_meals_fs = RiceMealsFS(request.POST, prefix="rm")
+        sides_fs = SidesFS(request.POST, prefix="si")
+        add_ons_fs = AddOnsFS(request.POST, prefix="ao")
 
-        if order_form.is_valid() and order_content_formset.is_valid():
+        if (
+            order_form.is_valid()
+            and premium_patties_fs.is_valid()
+            and chicken_burgers_fs.is_valid()
+            and smash_burgers_fs.is_valid()
+            and drinks_fs.is_valid()
+            and pancakes_fs.is_valid()
+            and rice_meals_fs.is_valid()
+            and sides_fs.is_valid()
+            and add_ons_fs.is_valid()
+        ):
+            # test
+            # return JsonResponse({"saved": True})
             order_date = order_form.cleaned_data.get("order_date")
             order_type = order_form.cleaned_data.get("order_type")
             payment_option = order_form.cleaned_data.get("payment_option")
@@ -161,23 +210,87 @@ def create_order(request):
                 # this part will consolidate the same products, i.e. if two of the same product
                 # was ordered, those two rows will show up as one with the quantities totaled
                 order_contents_cleaned = {}
-                for ocf in order_content_formset:
-                    product = ocf.cleaned_data.get("product")
-                    qty = ocf.cleaned_data.get("qty")
-                    order_contents_cleaned[product] = order_contents_cleaned.get(product, 0) + qty
+                for fs in (
+                    premium_patties_fs,
+                    chicken_burgers_fs,
+                    smash_burgers_fs,
+                    drinks_fs,
+                    pancakes_fs,
+                    rice_meals_fs,
+                    sides_fs,
+                    add_ons_fs,
+                ):
+                    for ocf in fs:
+                        if not ocf.cleaned_data:
+                            continue
+                        product = ocf.cleaned_data.get("product", None)
+                        qty = ocf.cleaned_data.get("qty", None)
+                        if not product:
+                            continue
+                        order_contents_cleaned[product] = order_contents_cleaned.get(product, 0) + qty
                 for product, qty in order_contents_cleaned.items():
                     OrderContent.objects.create(
                         order=order, product=product, qty=qty, price_at_order=product.unit_price
                     )
-            return HttpResponseRedirect("/orders/")
+            return JsonResponse({"saved": True, "ref": order.pk})
+        else:
+            return JsonResponse({"saved": False})
     else:
         order_form = OrderForm()
-        order_content_formset = OrderContentFormset()
+        premium_patties_fs = PremiumPattiesFS(prefix="pp")
+        chicken_burgers_fs = ChickenBurgersFS(prefix="cb")
+        smash_burgers_fs = SmashBurgersFS(prefix="sb")
+        drinks_fs = DrinksFS(prefix="dr")
+        pancakes_fs = PancakesFS(prefix="pa")
+        rice_meals_fs = RiceMealsFS(prefix="rm")
+        sides_fs = SidesFS(prefix="si")
+        add_ons_fs = AddOnsFS(prefix="ao")
 
     context = {
         "order_form": order_form,
-        "order_content_formset": order_content_formset,
+        "premium_patties_fs": premium_patties_fs,
+        "chicken_burgers_fs": chicken_burgers_fs,
+        "smash_burgers_fs": smash_burgers_fs,
+        "drinks_fs": drinks_fs,
+        "pancakes_fs": pancakes_fs,
+        "rice_meals_fs": rice_meals_fs,
+        "sides_fs": sides_fs,
+        "add_ons_fs": add_ons_fs,
         "page": "new-order",
     }
 
     return render(request, "new_order.html", context)
+
+
+@login_required
+def current_prices(request):
+    if request.method == "GET":
+        prices_dict = dict(Product.objects.filter(active=True).values_list("pk", "unit_price"))
+        names_dict = dict(Product.objects.filter(active=True).values_list("pk", "name"))
+        return JsonResponse({"prices": prices_dict, "names": names_dict})
+    return JsonResponse({})
+
+
+@login_required
+def print_order(request, id=None):
+    context = {"show": False}
+    if id:
+        order = Order.objects.filter(pk=id).first()
+        if order:
+            context["show"] = True
+            context["date"] = order.order_timestamp.strftime(DATETIME_FORMAT)
+            order_types = dict(Order.ORDER_TYPES)
+            context["type"] = order_types.get(order.order_type)
+            context["payment_opt"] = order.paid_by.desc
+            contents = []
+            total = 0
+            for oc in order.ordercontent_set.all():
+                sub_total = oc.qty * oc.price_at_order
+                total += sub_total
+                contents.append(
+                    {"product": oc.product.name, "qty": oc.qty, "price": oc.price_at_order, "subtotal": sub_total}
+                )
+            context["contents"] = contents
+            context["total"] = total
+
+    return render(request, "print_order.html", context)
