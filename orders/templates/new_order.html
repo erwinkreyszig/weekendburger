@@ -264,6 +264,7 @@
                 <span id="confirmMsg" class="d-none"></span>
                 <button type="button" class="btn btn-secondary" id="closeConfirmBtn">Close</button>
                 <button type="button" class="btn btn-primary" id="proceedOrderBtn">Create</button>
+                <button type="button" class="btn btn-secondary d-none" id="printOrderBtn">Print</button>
             </div>
         </div>
     </div>
@@ -281,7 +282,6 @@
             dataType: "json",
             success: (data) => {
                 products_data = data;
-                console.log(products_data);
             },
             error: (error) => {
                 console.log(error);
@@ -341,9 +341,9 @@
             prefix: "{{ add_ons_fs.prefix }}",
         });
         $("#new_order_form").submit(function (event, options) {
+            event.preventDefault();
             options = options || {};
             if (!options.input_check_complete) {
-                event.preventDefault();
                 // check if all inputs are blank
                 isEmpty = true;
                 qtyErrors = []
@@ -355,6 +355,8 @@
                         if (isNaN(qty) || (!isNaN(qty) && qty < 1)) {
                             qtyErrors.push("One or more items under <u>" + categ + "</u> have an invalid quantity.");
                         }
+                    } else {
+                        $(this).find("input").val("");
                     }
                 });
                 if (isEmpty) {
@@ -370,8 +372,8 @@
                 }
                 // pop out modal here
                 $("#order_info_summary_date").text($("#id_order_date").val());
-                $("#order_info_summary_type").text($("#id_order_type").val());
-                $("#order_info_summary_payment").text($("#id_payment_option").val());
+                $("#order_info_summary_type").text($("#id_order_type option:selected").text());
+                $("#order_info_summary_payment").text($("#id_payment_option option:selected").text());
                 // aggregate orders to display
                 grand_total = 0;
                 pp_summary = {};  // premium patties
@@ -458,7 +460,7 @@
                 }
                 $("#order_content_summary tbody").append("" +
                     "<tr>" +
-                        "<td colspan='3' style='align:right;'>Total</td>" +
+                        "<td colspan='3' style='text-align:right;'>Total</td>" +
                         "<td>" + grand_total + "</td>" +
                     "</tr>");
                 $("#orderConfirmModal").modal("show");
@@ -470,7 +472,27 @@
                     $("#new_order_form").trigger("submit", {"input_check_complete": true});
                 });
             } else {
-                alert("try to send data here");
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'new-order' %}",
+                    data: $(this).serialize(),
+                    success: (data) => {
+                        if (data.saved) {
+                            $("#confirmMsg").removeClass("d-none").text("Order saved.");
+                            $("#proceedOrderBtn").addClass("d-none").unbind("click");
+                            $("#printOrderBtn").removeClass("d-none").bind("click", function (event) {
+                                window.open("{% url 'print-order' %}".concat(data.ref)).focus();
+                            });
+                            // reset page when Close is clicked
+                            $("#closeConfirmBtn").click(function (event) {
+                                window.location.reload(true);
+                            });
+                        }
+                    },
+                    error: (error) => {
+                        console.log(error);
+                    }
+                });
             }          
         });
     });

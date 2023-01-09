@@ -195,7 +195,6 @@
                 "X-CSRFToken": token,
             },
             success: (data) => {
-                console.log(data);
                 if (data["total_items"] != 0) {
                     $("#orders-table").parent().removeClass("d-none");  // display if not shown
                     // populate table
@@ -227,6 +226,8 @@
                     $("#page_indicator").parent().addClass("d-none");
                     // show no orders msg
                     $("#no_orders_msg").removeClass("d-none");
+                    // update total amount
+                    $("#total_amt").text("Total: 0");
                 }
             },
             error: (error) => {

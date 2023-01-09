@@ -177,15 +177,6 @@ def create_order(request):
         sides_fs = SidesFS(request.POST, prefix="si")
         add_ons_fs = AddOnsFS(request.POST, prefix="ao")
 
-        print(f"pp is valid: {premium_patties_fs.is_valid()}")
-        print(f"cb is valid: {chicken_burgers_fs.is_valid()}")
-        print(f"sb is valid: {smash_burgers_fs.is_valid()}")
-        print(f"dr is valid: {drinks_fs.is_valid()}")
-        print(f"pa is valid: {pancakes_fs.is_valid()}")
-        print(f"rm is valid: {rice_meals_fs.is_valid()}")
-        print(f"si is valid: {sides_fs.is_valid()}")
-        print(f"ao is valid: {add_ons_fs.is_valid()}")
-
         if (
             order_form.is_valid()
             and premium_patties_fs.is_valid()
@@ -197,6 +188,8 @@ def create_order(request):
             and sides_fs.is_valid()
             and add_ons_fs.is_valid()
         ):
+            # test
+            # return JsonResponse({"saved": True})
             order_date = order_form.cleaned_data.get("order_date")
             order_type = order_form.cleaned_data.get("order_type")
             payment_option = order_form.cleaned_data.get("payment_option")
@@ -230,15 +223,18 @@ def create_order(request):
                     for ocf in fs:
                         if not ocf.cleaned_data:
                             continue
-                        product = ocf.cleaned_data.get("product")
-                        qty = ocf.cleaned_data.get("qty")
-                        print(product, qty)
+                        product = ocf.cleaned_data.get("product", None)
+                        qty = ocf.cleaned_data.get("qty", None)
+                        if not product:
+                            continue
                         order_contents_cleaned[product] = order_contents_cleaned.get(product, 0) + qty
                 for product, qty in order_contents_cleaned.items():
                     OrderContent.objects.create(
                         order=order, product=product, qty=qty, price_at_order=product.unit_price
                     )
-            return HttpResponseRedirect("/orders/")
+            return JsonResponse({"saved": True, "ref": order.pk})
+        else:
+            return JsonResponse({"saved": False})
     else:
         order_form = OrderForm()
         premium_patties_fs = PremiumPattiesFS(prefix="pp")
@@ -273,3 +269,28 @@ def current_prices(request):
         names_dict = dict(Product.objects.filter(active=True).values_list("pk", "name"))
         return JsonResponse({"prices": prices_dict, "names": names_dict})
     return JsonResponse({})
+
+
+@login_required
+def print_order(request, id=None):
+    context = {"show": False}
+    if id:
+        order = Order.objects.filter(pk=id).first()
+        if order:
+            context["show"] = True
+            context["date"] = order.order_timestamp.strftime(DATETIME_FORMAT)
+            order_types = dict(Order.ORDER_TYPES)
+            context["type"] = order_types.get(order.order_type)
+            context["payment_opt"] = order.paid_by.desc
+            contents = []
+            total = 0
+            for oc in order.ordercontent_set.all():
+                sub_total = oc.qty * oc.price_at_order
+                total += sub_total
+                contents.append(
+                    {"product": oc.product.name, "qty": oc.qty, "price": oc.price_at_order, "subtotal": sub_total}
+                )
+            context["contents"] = contents
+            context["total"] = total
+
+    return render(request, "print_order.html", context)

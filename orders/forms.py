@@ -86,16 +86,6 @@ class OrderForm(forms.Form):
     )
 
 
-"""
-class BaseOrderContentForm(forms.Form):
-    qty = forms.IntegerField(
-        label="Quantity",
-        widget=forms.NumberInput(attrs={"class": "form-control"}),
-        required=True,
-    )
-"""
-
-
 class PremiumPattiesOrderContentForm(forms.Form):
     product = forms.ModelChoiceField(
         queryset=Product.objects.filter(active=True, category__name="Premium Grilled Patties").order_by("name"),
@@ -216,8 +206,10 @@ class BaseOrderContentFormSet(BaseFormSet):
         for form in self.forms:
             if not form.cleaned_data:
                 continue
-            product = form.cleaned_data.get("product")
-            qty = form.cleaned_data.get("qty")
+            product = form.cleaned_data.get("product", None)
+            qty = form.cleaned_data.get("qty", None)
+            if not product:  # also skip if only qty is entered
+                continue
             qty = 0 if qty is None else qty
             counts[product] = counts.get(product, 0) + qty
         if any([qty < 1 for qty in list(counts.values())]):
