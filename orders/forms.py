@@ -82,6 +82,129 @@ class OrderForm(forms.Form):
             attrs={"class": "form-control"},
         ),
         required=True,
+        empty_label=None,
+    )
+
+
+"""
+class BaseOrderContentForm(forms.Form):
+    qty = forms.IntegerField(
+        label="Quantity",
+        widget=forms.NumberInput(attrs={"class": "form-control"}),
+        required=True,
+    )
+"""
+
+
+class PremiumPattiesOrderContentForm(forms.Form):
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.filter(active=True, category__name="Premium Grilled Patties").order_by("name"),
+        label="Premium Grilled Patties",
+        widget=forms.Select(attrs={"class": "form-control"}),
+        required=True,
+    )
+    qty = forms.IntegerField(
+        label="Quantity",
+        widget=forms.NumberInput(attrs={"class": "form-control", "categ": "Premium Grilled Patties"}),
+        required=True,
+    )
+
+
+class ChickenBurgersOrderContentForm(forms.Form):
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.filter(active=True, category__name="Chicken Burgers").order_by("name"),
+        label="Chicken Burgers",
+        widget=forms.Select(attrs={"class": "form-control"}),
+        required=True,
+    )
+    qty = forms.IntegerField(
+        label="Quantity",
+        widget=forms.NumberInput(attrs={"class": "form-control", "categ": "Chicken Burgers"}),
+        required=True,
+    )
+
+
+class SmashBurgersOrderContentForm(forms.Form):
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.filter(active=True, category__name="Smash Burgers").order_by("name"),
+        label="Smash Burgers",
+        widget=forms.Select(attrs={"class": "form-control"}),
+        required=True,
+    )
+    qty = forms.IntegerField(
+        label="Quantity",
+        widget=forms.NumberInput(attrs={"class": "form-control", "categ": "Smash Burgers"}),
+        required=True,
+    )
+
+
+class DrinksOrderContentForm(forms.Form):
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.filter(active=True, category__name="Drinks").order_by("name"),
+        label="Drinks",
+        widget=forms.Select(attrs={"class": "form-control"}),
+        required=True,
+    )
+    qty = forms.IntegerField(
+        label="Quantity",
+        widget=forms.NumberInput(attrs={"class": "form-control", "categ": "Drinks"}),
+        required=True,
+    )
+
+
+class PancakesOrderContentForm(forms.Form):
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.filter(active=True, category__name="Pancakes").order_by("name"),
+        label="Pancakes",
+        widget=forms.Select(attrs={"class": "form-control"}),
+        required=True,
+    )
+    qty = forms.IntegerField(
+        label="Quantity",
+        widget=forms.NumberInput(attrs={"class": "form-control", "categ": "Pancakes"}),
+        required=True,
+    )
+
+
+class RiceMealsOrderContentForm(forms.Form):
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.filter(active=True, category__name="Rice Meals").order_by("name"),
+        label="Rice Meals",
+        widget=forms.Select(attrs={"class": "form-control"}),
+        required=True,
+    )
+    qty = forms.IntegerField(
+        label="Quantity",
+        widget=forms.NumberInput(attrs={"class": "form-control", "categ": "Rice Meals"}),
+        required=True,
+    )
+
+
+class SidesOrderContentFom(forms.Form):
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.filter(active=True, category__name="Sides").order_by("name"),
+        label="Sides",
+        widget=forms.Select(attrs={"class": "form-control"}),
+        required=True,
+    )
+    qty = forms.IntegerField(
+        label="Quantity",
+        widget=forms.NumberInput(attrs={"class": "form-control", "categ": "Sides"}),
+        required=True,
+    )
+
+
+class AddOnsOrderContentForm(forms.Form):
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.filter(active=True, category__name="Add-ons").order_by("name"),
+        label="Add-ons",
+        widget=forms.Select(attrs={"class": "form-control"}),
+        required=True,
+    )
+    qty = forms.IntegerField(
+        label="Quantity",
+        widget=forms.NumberInput(attrs={"class": "form-control", "categ": "Add-Ons"}),
+        required=True,
     )
 
 
@@ -91,8 +214,59 @@ class BaseOrderContentFormSet(BaseFormSet):
             return
         counts = {}
         for form in self.forms:
+            if not form.cleaned_data:
+                continue
             product = form.cleaned_data.get("product")
             qty = form.cleaned_data.get("qty")
+            qty = 0 if qty is None else qty
             counts[product] = counts.get(product, 0) + qty
         if any([qty < 1 for qty in list(counts.values())]):
-            raise ValidationError("Cannot have a negative quantity.", code="not_positve_qty")
+            raise ValidationError(f"Entered {self.product} quantity is invalid.", code="not_positve_qty")
+
+
+class PremiumPattiesOrderContentFormSet(BaseOrderContentFormSet):
+    def __init__(self, *args, **kwargs):
+        super(BaseOrderContentFormSet, self).__init__(*args, **kwargs)
+        self.product = "Premium Grilled Patty"
+
+
+class ChickenBurgersOrderContentFormSet(BaseOrderContentFormSet):
+    def __init__(self, *args, **kwargs):
+        super(BaseOrderContentFormSet, self).__init__(*args, **kwargs)
+        self.product = "Chicken Burger"
+
+
+class SmashBurgersOrderContentFormSet(BaseOrderContentFormSet):
+    def __init__(self, *args, **kwargs):
+        super(BaseOrderContentFormSet, self).__init__(*args, **kwargs)
+        self.product = "Smash Burger"
+
+
+class DrinksOrderContentFormSet(BaseOrderContentFormSet):
+    def __init__(self, *args, **kwargs):
+        super(BaseOrderContentFormSet, self).__init__(*args, **kwargs)
+        self.product = "Drink"
+
+
+class PancakesOrderContentFormSet(BaseOrderContentFormSet):
+    def __init__(self, *args, **kwargs):
+        super(BaseOrderContentFormSet, self).__init__(*args, **kwargs)
+        self.product = "Pancake"
+
+
+class RiceMealsOrderContentFormSet(BaseOrderContentFormSet):
+    def __init__(self, *args, **kwargs):
+        super(BaseOrderContentFormSet, self).__init__(*args, **kwargs)
+        self.product = "Rice Meal"
+
+
+class SidesOrderContentFormSet(BaseOrderContentFormSet):
+    def __init__(self, *args, **kwargs):
+        super(BaseOrderContentFormSet, self).__init__(*args, **kwargs)
+        self.product = "Side"
+
+
+class AddOnsOrderContentFormSet(BaseOrderContentFormSet):
+    def __init__(self, *args, **kwargs):
+        super(BaseOrderContentFormSet, self).__init__(*args, **kwargs)
+        self.product = "Add-on"

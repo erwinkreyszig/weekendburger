@@ -134,55 +134,52 @@
             // contents. turns out .find() was getting all child elements that match the selector
             htmlStr = '' +
                 '<tr>' +
-                '<td rowspan="2" class="align-middle">' +
-                '<button class="btn btn-primary" type="button" ' +
-                'style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem;" ' +
-                'data-bs-toggle="collapse" data-bs-target="#collapse' + pk + '" ' +
-                'aria-expanded="false" aria-controls="collapse' + pk + '">' +
-                order_ts +
-                '</button>' +
-                '</td>' +
-                '<td><b>Type:</b>&nbsp;' + type + '</td>' +
-                '<td><b>Status:</b>&nbsp;' + status + '</td>' +
-                '<td><b>Taken by:</b>&nbsp;' + user + '</td>' +
-                '<td><b>Payment method:</b>&nbsp;' + payment_method + '</td>' +
+                    '<td rowspan="2" class="align-middle">' +
+                        '<button class="btn btn-primary" type="button" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem;" data-bs-toggle="collapse" data-bs-target="#collapse' + pk + '" aria-expanded="false" aria-controls="collapse' + pk + '">' +
+                            order_ts +
+                        '</button>' +
+                    '</td>' +
+                    '<td><b>Type:</b>&nbsp;' + type + '</td>' +
+                    '<td><b>Status:</b>&nbsp;' + status + '</td>' +
+                    '<td><b>Taken by:</b>&nbsp;' + user + '</td>' +
+                    '<td><b>Payment method:</b>&nbsp;' + payment_method + '</td>' +
                 '</tr>' +
                 '<tr>' +
-                '<td colspan="4">' +
-                '<div class="collapse" id="collapse' + pk + '">' +
-                '<div class="card card-body">' +
-                '<table class="table table-sm">' +
-                '<thead class="table-light">' +
-                '<tr>' +
-                '<th scope="col">Category</th>' +
-                '<th scope="col">Name</th>' +
-                '<th scope="col">Price</th>' +
-                '<th scope="col">Quantity</th>' +
-                '</tr>' +
-                '</thead>' +
-                '<tbody class="table-group-divider">';
+                    '<td colspan="4">' +
+                        '<div class="collapse" id="collapse' + pk + '">' +
+                            '<div class="card card-body">' +
+                                '<table class="table table-sm">' +
+                                    '<thead class="table-light">' +
+                                        '<tr>' +
+                                            '<th scope="col">Category</th>' +
+                                            '<th scope="col">Name</th>' +
+                                            '<th scope="col">Price</th>' +
+                                            '<th scope="col">Quantity</th>' +
+                                        '</tr>' +
+                                    '</thead>' +
+                                    '<tbody class="table-group-divider">';
             contents = order["contents"];
             contentHtmlStr = '';
             for (let i = 0; i < contents.length; i++) {
                 content = contents[i];
                 contentHtmlStr += '' +
-                    '<tr>' +
-                    '<td>' + content["category"] + '</td>' +
-                    '<td>' + content["name"] + '</td>' +
-                    '<td>' + content["price"] + '</td>' +
-                    '<td>' + content["qty"] + '</td>' +
-                    '</tr>';
+                                        '<tr>' +
+                                            '<td>' + content["category"] + '</td>' +
+                                            '<td>' + content["name"] + '</td>' +
+                                            '<td>' + content["price"] + '</td>' +
+                                            '<td>' + content["qty"] + '</td>' +
+                                        '</tr>';
             }
             htmlStr += contentHtmlStr +
-                '<tr>' +
-                '<td colspan="2" align="right">Total:</td>' +
-                '<td colspan="2">' + total + '</td>' +
-                '</tr>' +
-                '</tbody>' +
-                '</table>' +
-                '</div>' +
-                '</div>' +
-                '</td>' +
+                                        '<tr>' +
+                                            '<td colspan="2" align="right">Total:</td>' +
+                                            '<td colspan="2">' + total + '</td>' +
+                                        '</tr>' +
+                                    '</tbody>' +
+                                '</table>' +
+                            '</div>' +
+                        '</div>' +
+                    '</td>' +
                 '</tr>';
             $("#orders-table").append(htmlStr);
             htmlStr = '';
