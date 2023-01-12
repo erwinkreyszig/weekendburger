@@ -4,9 +4,9 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import F, When, Case, Value
+from django.db.models import F, When, Case, Value, Q
 from django.forms.formsets import formset_factory
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from .forms import (
@@ -278,7 +278,7 @@ def print_order(request, id=None):
         order = Order.objects.filter(pk=id).first()
         if order:
             context["show"] = True
-            context["date"] = order.order_timestamp.strftime(DATETIME_FORMAT)
+            context["date"] = order.order_timestamp.astimezone(pytz.timezone(TIME_ZONE)).strftime(DATETIME_FORMAT)
             order_types = dict(Order.ORDER_TYPES)
             context["type"] = order_types.get(order.order_type)
             context["payment_opt"] = order.paid_by.desc
@@ -294,3 +294,54 @@ def print_order(request, id=None):
             context["total"] = total
 
     return render(request, "print_order.html", context)
+
+
+@login_required
+def aggregate_orders(request, fromdate=None, todate=None):
+    context = {"show": False, "msg": ""}
+    try:
+        fromdate = datetime.strptime(fromdate, DATE_FORMAT) if fromdate else None
+        todate = datetime.strptime(todate, DATE_FORMAT) if todate else None
+    except ValueError:
+        context["msg"] = "Parameters have the incorrect date format (YYYY-MM-DD)."
+        return render(request, "aggregate_orders.html", context)
+    if (fromdate and todate) and fromdate > todate:
+        context["msg"] = "Invalid date parameters."
+        return render(request, "aggregate_orders.html", context)
+    if not fromdate:
+        context["msg"] = "Needs a date for the start of period."
+        return render(request, "aggregate_orders.html", context)
+    if not todate:
+        todate = fromdate.replace(hour=23, minute=59, second=59)
+    order_pks = Order.objects.filter(
+        Q(order_timestamp__gte=timezone.make_aware(fromdate)) & Q(order_timestamp__lte=timezone.make_aware(todate))
+    ).values_list("pk", flat=True)
+    contents = (
+        OrderContent.objects.select_related("product")
+        .filter(order__pk__in=order_pks)
+        .order_by("product__category__name")
+    )
+    aggregated = {}
+    grand_total = 0
+    for item in contents:
+        key = (item.product_id, item.price_at_order)
+        subtotal = item.qty * item.price_at_order
+        grand_total += subtotal
+        if key not in aggregated:
+            aggregated[key] = {
+                "category": item.product.category.name,
+                "product": item.product.name,
+                "qty": item.qty,
+                "price": item.price_at_order,
+                "total": subtotal,
+            }
+        else:
+            aggregated[key]["qty"] += item.qty
+            aggregated[key]["total"] += subtotal
+    context["show"] = True
+    context["fromdate"] = f'{fromdate.strftime("%b %d, %Y")} 00:00:00'
+    context["todate"] = f'{todate.strftime("%b %d, %Y")} 23:59:59'
+    context["data"] = aggregated
+    context["grand_total"] = grand_total
+
+    return render(request, "aggregate_orders.html", context)

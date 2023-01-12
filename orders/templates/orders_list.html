@@ -25,6 +25,7 @@
             </div>
             <div class="col-md-3">
                 <button type="submit" class="btn btn-primary">Update</button>
+                <button type="button" class="btn btn-secondary" id="aggregateBtn" style="margin-left:10px;">Aggregate</button>
             </div>
             <input type="hidden" id="page_num" value="{{ page_num }}" />
             <input type="hidden" id="num_items_for_post" value="{{ num_items }}" />
@@ -41,6 +42,7 @@
                     data-bs-target="#collapse{{ row.pk }}" aria-expanded="false" aria-controls="collapse{{ row.pk }}">
                     {{ row.order_timestamp }}
                 </button>
+                <button class="btn btn-secondary printBtn" type="button" style="margin-left:10px;">Print</button>
             </td>
             <td><b>Type:</b>&nbsp;{{ row.type }}</td>
             <td><b>Status:</b>&nbsp;{{ row.status }}</td>
@@ -138,6 +140,7 @@
                         '<button class="btn btn-primary" type="button" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem;" data-bs-toggle="collapse" data-bs-target="#collapse' + pk + '" aria-expanded="false" aria-controls="collapse' + pk + '">' +
                             order_ts +
                         '</button>' +
+                        '<button class="btn btn-secondary printBtn" type="button" style="margin-left:10px;">Print</button>' + 
                     '</td>' +
                     '<td><b>Type:</b>&nbsp;' + type + '</td>' +
                     '<td><b>Status:</b>&nbsp;' + status + '</td>' +
@@ -218,6 +221,8 @@
                     $("#no_orders_msg").addClass("d-none");
                     // update total amount
                     $("#total_amt").text("Total: ".concat(data["total"]));
+                    // attach click event to print buttons
+                    attachOpenNewTabToRows()
                 } else {
                     // hide table
                     $("#orders-table").parent().addClass("d-none");
@@ -233,6 +238,12 @@
             error: (error) => {
                 console.log(error)
             }
+        });
+    }
+    function attachOpenNewTabToRows() {
+        $("button.printBtn").bind("click", function (event) {
+            pk = $(this).prev().attr("aria-controls").replace("collapse", "");
+            window.open("{% url 'print-order' %}".concat(pk)).focus();
         });
     }
     $(document).ready(function () {
@@ -283,6 +294,18 @@
             pullOrders(getFormInput(1), token);
             $("#page_num").val(parseInt($("#page_num").val()) + 1);
         });
+        $("#aggregateBtn").click(function (event) {
+            formInput = getFormInput(0);
+            fromDate = formInput.start_date;
+            toDate = formInput.end_date;
+            url = "{% url 'aggregate-orders' %}".concat(fromDate);
+            if (toDate != "") {
+                url = url.concat("/", toDate);
+            }
+            window.open(url).focus();
+        });
+        // attach click event to print buttons
+        attachOpenNewTabToRows();
     });
 </script>
 {% endblock %}
