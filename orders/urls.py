@@ -7,4 +7,7 @@ urlpatterns = [
     path("product_prices/", views.current_prices, name="product-prices"),
     path("print_order/", views.print_order, name="print-order"),
     path("print_order/<int:id>/", views.print_order, name="print-order"),
+    path("aggregate_orders/", views.aggregate_orders, name="aggregate-orders"),
+    path("aggregate_orders/<fromdate>/", views.aggregate_orders, name="aggregate-orders"),
+    path("aggregate_orders/<fromdate>/<todate>/", views.aggregate_orders, name="aggregate-orders"),
 ]
