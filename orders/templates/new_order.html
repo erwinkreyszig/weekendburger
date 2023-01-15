@@ -498,12 +498,17 @@
                             });
                         } else {
                             $("#confirmMsg").removeClass("d-none").text("An error has occurred. Please try again.");
-                            $("#proceedOrderBtn").removeClass("disabled").bind("click");
+                            $("#proceedOrderBtn").removeClass("disabled").click(function (event) {
+                                $("#new_order_form").trigger("submit", {"input_check_complete": true});
+                            });
                         }
                     },
                     error: (error) => {
                         console.log(error);
                         $("#confirmMsg").removeClass("d-none").text("An error has occurred. Please try again.");
+                        $("#proceedOrderBtn").removeClass("disabled").click(function (event) {
+                            $("#new_order_form").trigger("submit", {"input_check_complete": true});
+                        });
                     }
                 });
             }          
