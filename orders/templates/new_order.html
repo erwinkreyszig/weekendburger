@@ -4,11 +4,11 @@
 <h2>New Order</h2>
 <hr />
 <form method="post" id="new_order_form">
-    <div class="container" style="padding-top: 20px;">
+    <div class="container-fluid" style="padding-top: 20px;">
         <div class="row">
             {% csrf_token %}
-            <div class="col-1"></div>
-            <div class="col-2">
+            <div class="col-md-1"></div>
+            <div class="col-md-2">
                 <div class="form-floating mb-3">
                     {{ order_form.order_date }}
                     {{ order_form.order_date.label_tag }}
@@ -25,7 +25,7 @@
                     <span style="color:red;">{{ order_form.payment_option.errors }}</span>
                 </div>
             </div>
-            <div class="col-4 oc-col">
+            <div class="col-md-4 oc-col">
                 <table class="table table-hover table-sm">
                     <thead>
                         <tr>
@@ -95,7 +95,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="col-4 oc-col">
+            <div class="col-md-4 oc-col">
                 <table class="table table-hover table-sm">
                     <thead>
                         <tr>
@@ -165,14 +165,14 @@
                     </tbody>
                 </table>
             </div>
-            <div class="col-1"></div>
+            <div class="col-md-1"></div>
         </div>
         <div class="row">
             <hr />
-            <div class="col-4" style="text-align: right;">
+            <div class="col-md-4" style="text-align: right;">
                 <input type="submit" value="Create order" class="btn btn-primary" />
             </div>
-            <div class="col-8" style="color: red;" id="error_msg">
+            <div class="col-md-8" style="color: red;" id="error_msg">
                 <!-- error messages returned by POST -->
                 {% if premium_patties_fs.non_form_errors or smash_burgers_fs.non_form_errors or chicken_burgers_fs.non_form_errors or add_ons_fs.non_form_errors or sides_fs.non_form_errors or rice_meals_fs.non_form_errors or pancakes_fs.non_form_errors or drinks_fs.non_form_errors %}
                     <strong>Please fix the following errors:</strong><br />
