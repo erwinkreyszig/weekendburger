@@ -471,14 +471,16 @@
                     $("#new_order_form").trigger("submit", {"input_check_complete": true});
                 });
             } else {
+                $("#proceedOrderBtn").addClass("disabled").unbind("click");
+                $("#confirmMsg").removeClass("d-none").text("Saving order...");
                 $.ajax({
                     type: "POST",
                     url: "{% url 'new-order' %}",
                     data: $(this).serialize(),
                     success: (data) => {
                         if (data.saved) {
+                            $("#proceedOrderBtn").addClass("d-none");
                             $("#confirmMsg").removeClass("d-none").text("Order saved.");
-                            $("#proceedOrderBtn").addClass("d-none").unbind("click");
                             $("#printOrderBtn").removeClass("d-none").bind("click", function (event) {
                                 window.open("{% url 'print-order' %}".concat(data.ref)).focus();
                             });
@@ -490,6 +492,7 @@
                     },
                     error: (error) => {
                         console.log(error);
+                        $("#confirmMsg").removeClass("d-none").text("An error has occurred. Please try again.");
                     }
                 });
             }          
