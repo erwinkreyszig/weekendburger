@@ -24,8 +24,18 @@
                 {{ form.items }}
             </div>
             <div class="col-md-3">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12 justify-content-center">
+                            <button type="submit" class="btn btn-primary">Update</button>
+                            <button type="button" class="btn btn-secondary" id="aggregateBtn">Aggregate</button>
+                        </div>
+                    </div>
+                </div>
+                <!--
                 <button type="submit" class="btn btn-primary">Update</button>
                 <button type="button" class="btn btn-secondary" id="aggregateBtn" style="margin-left:10px;">Aggregate</button>
+                -->
             </div>
             <input type="hidden" id="page_num" value="{{ page_num }}" />
             <input type="hidden" id="num_items_for_post" value="{{ num_items }}" />
@@ -38,19 +48,28 @@
             {% for row in orders %}
             <tr>
                 <td rowspan="2" class="align-middle">
-                    <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapse{{ row.pk }}" aria-expanded="false" aria-controls="collapse{{ row.pk }}">
-                        {{ row.order_timestamp }}
-                    </button>
-                    <button class="btn btn-secondary btn-sm printBtn" type="button" style="margin-left:10px;">Print</button>
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-6 mb-1 mb-md-0">
+                                <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapse{{ row.pk }}" aria-expanded="false" aria-controls="collapse{{ row.pk }}">
+                                    # {{ row.pk }}
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-secondary btn-sm printBtn" type="button">Print</button>
+                            </div>
+                        </div>
+                    </div>
                 </td>
+                <td><b>Date:</b>&nbsp;{{ row.order_timestamp }}</td>
                 <td><b>Type:</b>&nbsp;{{ row.type }}</td>
                 <td><b>Status:</b>&nbsp;{{ row.status }}</td>
                 <td><b>Taken by:</b>&nbsp;{{ row.user }}</td>
                 <td><b>Payment method:</b>&nbsp;{{ row.payment_method }}</td>
             </tr>
             <tr>
-                <td colspan="4">
+                <td colspan="5">
                     <div class="collapse" id="collapse{{ row.pk }}">
                         <div class="card card-body">
                             <div class="table-responsive-sm">
@@ -141,17 +160,18 @@
                 '<tr>' +
                     '<td rowspan="2" class="align-middle">' +
                         '<button class="btn btn-primary btn-sm" type="button" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem;" data-bs-toggle="collapse" data-bs-target="#collapse' + pk + '" aria-expanded="false" aria-controls="collapse' + pk + '">' +
-                            order_ts +
+                            '#&nbsp;' + pk +
                         '</button>' +
                         '<button class="btn btn-secondary btn-sm printBtn" type="button" style="margin-left:10px;">Print</button>' + 
                     '</td>' +
+                    '<td><b>Date:</b>&nbsp;' + order_ts + '</td>' +
                     '<td><b>Type:</b>&nbsp;' + type + '</td>' +
                     '<td><b>Status:</b>&nbsp;' + status + '</td>' +
                     '<td><b>Taken by:</b>&nbsp;' + user + '</td>' +
                     '<td><b>Payment method:</b>&nbsp;' + payment_method + '</td>' +
                 '</tr>' +
                 '<tr>' +
-                    '<td colspan="4">' +
+                    '<td colspan="5">' +
                         '<div class="collapse" id="collapse' + pk + '">' +
                             '<div class="card card-body">' +
                                 '<div class="table-responsive-sm">' + 
