@@ -59,15 +59,15 @@
                     <div class="container-fluid">
                         <div class="row">
                             <div class="col-md-auto mb-1 mb-md-0">
-                                <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#collapse{{ row.pk }}" aria-expanded="false" aria-controls="collapse{{ row.pk }}">
+                                <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ row.pk }}" aria-expanded="false" aria-controls="collapse{{ row.pk }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-fill" viewBox="0 0 16 16">
                                         <path fill-rule="evenodd" d="M10 1.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1Zm-5 0A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5v1A1.5 1.5 0 0 1 9.5 4h-3A1.5 1.5 0 0 1 5 2.5v-1Zm-2 0h1v1A2.5 2.5 0 0 0 6.5 5h3A2.5 2.5 0 0 0 12 2.5v-1h1a2 2 0 0 1 2 2V14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3.5a2 2 0 0 1 2-2Z"></path>
                                     </svg>
-                                    # {{ row.pk }}
+                                    #&nbsp;{{ row.pk }}
                                 </button>
                             </div>
                             <div class="col-md-6">
+                                {% if "auth.can_view_reports" in permissions or "auth.can_add_orders" in permissions %}
                                 <button type="button" class="btn btn-primary btn-sm printBtn">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
                                         <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
@@ -75,6 +75,7 @@
                                     </svg>
                                     Print
                                 </button>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -189,22 +190,25 @@
                         '<div class="container-fluid">' +
                             '<div class="row">' + 
                                 '<div class="col-md-auto mb-1 mb-md-0">' +
-                                    '<button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" ' +
-                                        'data-bs-target="#collapse' + pk + '" aria-expanded="false" aria-controls="collapse' + pk + '">' +
+                                    '<button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapse' + pk + '" aria-expanded="false" aria-controls="collapse' + pk + '">' +
                                         '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-fill" viewBox="0 0 16 16">' +
                                             '<path fill-rule="evenodd" d="M10 1.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1Zm-5 0A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5v1A1.5 1.5 0 0 1 9.5 4h-3A1.5 1.5 0 0 1 5 2.5v-1Zm-2 0h1v1A2.5 2.5 0 0 0 6.5 5h3A2.5 2.5 0 0 0 12 2.5v-1h1a2 2 0 0 1 2 2V14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3.5a2 2 0 0 1 2-2Z"></path>' +
                                         '</svg>' + 
-                                        '#&nbsp;' + pk +
+                                        ' #&nbsp;' + pk +
                                     '</button>' +
                                 '</div>' +
-                                '<div class="col-md-6">' +
+                                '<div class="col-md-6">';
+            if (data["permissions"].includes("auth.can_view_reports") || data["permissions"].includes("auth.can_add_orders")) {
+                htmlStr += '' +
                                     '<button type="button" class="btn btn-primary btn-sm printBtn">' + 
                                         '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">' + 
                                             '<path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>' + 
                                             '<path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>' +
                                         '</svg>' +
-                                        'Print' +
-                                    '</button>' +
+                                        ' Print' +
+                                    '</button>';
+            }
+            htmlStr += '' +
                                 '</div>' +
                             '</div>' +
                         '</div>' +
