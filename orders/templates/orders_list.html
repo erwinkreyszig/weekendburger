@@ -24,10 +24,26 @@
                 {{ form.items }}
             </div>
             <div class="col-md-3">
-                <button type="submit" class="btn btn-primary">Update</button>
-                {% if "auth.can_view_reports" in permissions %}
-                <button type="button" class="btn btn-secondary" id="aggregateBtn" style="margin-left:10px;">Aggregate</button>
-                {% endif %}
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12 justify-content-center">
+                            <button type="submit" class="btn btn-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
+                                </svg>
+                                Update
+                            </button>
+                            {% if "auth.can_view_reports" in permissions %}
+                            <button type="button" class="btn btn-secondary" id="aggregateBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-ruled-fill" viewBox="0 0 16 16">
+                                    <path d="M12 0H4a2 2 0 0 0-2 2v4h12V2a2 2 0 0 0-2-2zm2 7H6v2h8V7zm0 3H6v2h8v-2zm0 3H6v3h6a2 2 0 0 0 2-2v-1zm-9 3v-3H2v1a2 2 0 0 0 2 2h1zm-3-4h3v-2H2v2zm0-3h3V7H2v2z"/>
+                                </svg>
+                                Aggregate
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
             <input type="hidden" id="page_num" value="{{ page_num }}" />
             <input type="hidden" id="num_items_for_post" value="{{ num_items }}" />
@@ -40,19 +56,37 @@
             {% for row in orders %}
             <tr>
                 <td rowspan="2" class="align-middle">
-                    <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapse{{ row.pk }}" aria-expanded="false" aria-controls="collapse{{ row.pk }}">
-                        {{ row.order_timestamp }}
-                    </button>
-                    <button class="btn btn-secondary btn-sm printBtn" type="button" style="margin-left:10px;">Print</button>
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-auto mb-1 mb-md-0">
+                                <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapse{{ row.pk }}" aria-expanded="false" aria-controls="collapse{{ row.pk }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-fill" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M10 1.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1Zm-5 0A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5v1A1.5 1.5 0 0 1 9.5 4h-3A1.5 1.5 0 0 1 5 2.5v-1Zm-2 0h1v1A2.5 2.5 0 0 0 6.5 5h3A2.5 2.5 0 0 0 12 2.5v-1h1a2 2 0 0 1 2 2V14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3.5a2 2 0 0 1 2-2Z"></path>
+                                    </svg>
+                                    # {{ row.pk }}
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-primary btn-sm printBtn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+                                        <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
+                                        <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
+                                    </svg>
+                                    Print
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </td>
+                <td><b>Date:</b>&nbsp;{{ row.order_timestamp }}</td>
                 <td><b>Type:</b>&nbsp;{{ row.type }}</td>
                 <td><b>Status:</b>&nbsp;{{ row.status }}</td>
                 <td><b>Taken by:</b>&nbsp;{{ row.user }}</td>
                 <td><b>Payment method:</b>&nbsp;{{ row.payment_method }}</td>
             </tr>
             <tr>
-                <td colspan="4">
+                <td colspan="5">
                     <div class="collapse" id="collapse{{ row.pk }}">
                         <div class="card card-body">
                             <div class="table-responsive-sm">
@@ -94,10 +128,20 @@
         <nav aria-label="pagination" class="{% if total_items == 0 %}d-none{% endif %}">
             <ul class="pagination">
                 <li class="page-item {% if page_num == 1 %} disabled {% endif %}">
-                    <a class="page-link" id="prev_page" href="#">Previous</a>
+                    <a class="page-link" id="prev_page" href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left-square-fill" viewBox="0 0 16 16">
+                            <path d="M16 14a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12zm-4.5-6.5H5.707l2.147-2.146a.5.5 0 1 0-.708-.708l-3 3a.5.5 0 0 0 0 .708l3 3a.5.5 0 0 0 .708-.708L5.707 8.5H11.5a.5.5 0 0 0 0-1z"/>
+                        </svg>
+                        Previous
+                    </a>
                 </li>
                 <li class="page-item {% if page_num == total_pages %} disabled {% endif %}">
-                    <a class="page-link" id="next_page" href="#">Next</a>
+                    <a class="page-link" id="next_page" href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-square-fill" viewBox="0 0 16 16">
+                            <path d="M0 14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2v12zm4.5-6.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5a.5.5 0 0 1 0-1z"/>
+                        </svg>
+                        Next
+                    </a>
                 </li>
             </ul>
         </nav>
@@ -142,18 +186,37 @@
             htmlStr = '' +
                 '<tr>' +
                     '<td rowspan="2" class="align-middle">' +
-                        '<button class="btn btn-primary btn-sm" type="button" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem;" data-bs-toggle="collapse" data-bs-target="#collapse' + pk + '" aria-expanded="false" aria-controls="collapse' + pk + '">' +
-                            order_ts +
-                        '</button>' +
-                        '<button class="btn btn-secondary btn-sm printBtn" type="button" style="margin-left:10px;">Print</button>' + 
+                        '<div class="container-fluid">' +
+                            '<div class="row">' + 
+                                '<div class="col-md-auto mb-1 mb-md-0">' +
+                                    '<button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" ' +
+                                        'data-bs-target="#collapse' + pk + '" aria-expanded="false" aria-controls="collapse' + pk + '">' +
+                                        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-fill" viewBox="0 0 16 16">' +
+                                            '<path fill-rule="evenodd" d="M10 1.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1Zm-5 0A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5v1A1.5 1.5 0 0 1 9.5 4h-3A1.5 1.5 0 0 1 5 2.5v-1Zm-2 0h1v1A2.5 2.5 0 0 0 6.5 5h3A2.5 2.5 0 0 0 12 2.5v-1h1a2 2 0 0 1 2 2V14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3.5a2 2 0 0 1 2-2Z"></path>' +
+                                        '</svg>' + 
+                                        '#&nbsp;' + pk +
+                                    '</button>' +
+                                '</div>' +
+                                '<div class="col-md-6">' +
+                                    '<button type="button" class="btn btn-primary btn-sm printBtn">' + 
+                                        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">' + 
+                                            '<path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>' + 
+                                            '<path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>' +
+                                        '</svg>' +
+                                        'Print' +
+                                    '</button>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
                     '</td>' +
+                    '<td><b>Date:</b>&nbsp;' + order_ts + '</td>' +
                     '<td><b>Type:</b>&nbsp;' + type + '</td>' +
                     '<td><b>Status:</b>&nbsp;' + status + '</td>' +
                     '<td><b>Taken by:</b>&nbsp;' + user + '</td>' +
                     '<td><b>Payment method:</b>&nbsp;' + payment_method + '</td>' +
                 '</tr>' +
                 '<tr>' +
-                    '<td colspan="4">' +
+                    '<td colspan="5">' +
                         '<div class="collapse" id="collapse' + pk + '">' +
                             '<div class="card card-body">' +
                                 '<div class="table-responsive-sm">' + 
@@ -249,7 +312,7 @@
     }
     function attachOpenNewTabToRows() {
         $("button.printBtn").bind("click", function (event) {
-            pk = $(this).prev().attr("aria-controls").replace("collapse", "");
+            pk = $(this).parent().prev().find(".btn").attr("aria-controls").replace("collapse", "");
             window.open("{% url 'print-order' %}".concat(pk)).focus();
         });
     }

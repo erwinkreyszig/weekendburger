@@ -287,6 +287,7 @@ def print_order(request, id=None):
         order = Order.objects.filter(pk=id).first()
         if order:
             context["show"] = True
+            context["id"] = id
             context["date"] = order.order_timestamp.astimezone(pytz.timezone(TIME_ZONE)).strftime(DATETIME_FORMAT)
             order_types = dict(Order.ORDER_TYPES)
             context["type"] = order_types.get(order.order_type)
