@@ -25,7 +25,9 @@
             </div>
             <div class="col-md-3">
                 <button type="submit" class="btn btn-primary">Update</button>
+                {% if "auth.can_view_reports" in permissions %}
                 <button type="button" class="btn btn-secondary" id="aggregateBtn" style="margin-left:10px;">Aggregate</button>
+                {% endif %}
             </div>
             <input type="hidden" id="page_num" value="{{ page_num }}" />
             <input type="hidden" id="num_items_for_post" value="{{ num_items }}" />

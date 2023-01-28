@@ -25,15 +25,20 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                    {% if "auth.can_add_orders" in permissions %}
                     <li class="nav-item"><a class="nav-link {% if page == 'new-order' %}active{% endif %}"
-                            href="{% url 'new-order' %}">New Order</a></li>
+                            href="{% url 'new-order' %}">New Order</a>
+                    </li>
+                    {% endif %}
+                    {% if "auth.can_view_orders" in permissions %}
                     <li class="nav-item">
                         <a class="nav-link {% if page == 'orders-list' %}active{% endif %}" aria-current="page"
                             href="{% url 'orders' %}">Orders List</a>
                     </li>
+                    {% endif %}
                 </ul>
                 <span class="navbar-text">
-                    <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                    <a class="nav-link" href="{% url 'logout' %}">Logout | <strong>{{ username }}</strong></a>
                 </span>
             </div>
         </div>

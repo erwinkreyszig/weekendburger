@@ -30,6 +30,7 @@ from .forms import (
     AddOnsOrderContentFormSet,
 )
 from .models import Order, OrderContent, Product
+from .permissions import user_can_do, CAN_ADD_ORDER_PERM, CAN_VIEW_ORDER_PERM, CAN_VIEW_REPORT_PERM
 
 # Create your views here.
 
@@ -40,6 +41,7 @@ PAGE_NUM_DEFAULT = 1
 
 
 @login_required
+@user_can_do(permissions=(CAN_VIEW_ORDER_PERM, CAN_ADD_ORDER_PERM))
 def order_list(request):
     start_date = datetime.now()
     end_date = None
@@ -140,6 +142,8 @@ def order_list(request):
             }
         ),
         "total": total,
+        "permissions": list(request.user.get_all_permissions()),
+        "username": request.user.username,
     }
 
     if request.method == "GET":
@@ -150,6 +154,7 @@ def order_list(request):
 
 
 @login_required
+@user_can_do(permissions=(CAN_ADD_ORDER_PERM,))
 def create_order(request):
     PremiumPattiesFS = formset_factory(
         PremiumPattiesOrderContentForm, formset=PremiumPattiesOrderContentFormSet, extra=1
@@ -257,12 +262,15 @@ def create_order(request):
         "sides_fs": sides_fs,
         "add_ons_fs": add_ons_fs,
         "page": "new-order",
+        "permissions": list(request.user.get_all_permissions()),
+        "username": request.user.username,
     }
 
     return render(request, "new_order.html", context)
 
 
 @login_required
+@user_can_do(permissions=(CAN_ADD_ORDER_PERM,))
 def current_prices(request):
     if request.method == "GET":
         prices_dict = dict(Product.objects.filter(active=True).values_list("pk", "unit_price"))
@@ -272,6 +280,7 @@ def current_prices(request):
 
 
 @login_required
+@user_can_do(permissions=(CAN_ADD_ORDER_PERM, CAN_VIEW_ORDER_PERM))
 def print_order(request, id=None):
     context = {"show": False}
     if id:
@@ -297,6 +306,7 @@ def print_order(request, id=None):
 
 
 @login_required
+@user_can_do(permissions=(CAN_VIEW_REPORT_PERM,))
 def aggregate_orders(request, fromdate=None, todate=None):
     context = {"show": False, "msg": ""}
     try:
