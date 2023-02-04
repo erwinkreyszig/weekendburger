@@ -5,7 +5,24 @@
     button.ui-datepicker-current {
         display: none;
     }
+    .overlay {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        top: 40%;
+        left: 0px;
+        opacity: 0.5;
+        filter: alpha(opacity=50);
+    }
 </style>
+<div class="overlay">
+    <div class="d-flex justify-content-center">  
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; z-index: 20;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
 <h2>Orders | <span id="total_amt" style="font-size: large;">Total: {{ total }}</span></h2>
 <div class="card" style="margin-bottom: 15px;">
     <div class="card-body">
@@ -27,7 +44,7 @@
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-12 justify-content-center">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary" id="updateBtn">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                                     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
                                 </svg>
@@ -157,6 +174,20 @@
 {% block extra_js %}
 <script type="text/javascript">
     const token = $("[name=csrfmiddlewaretoken]").val();
+    function disableInputs() {
+        $("#id_start_date, #id_end_date, #id_items").prop("disabled", true);
+        $("#updateBtn, #aggregateBtn").addClass("disabled");
+    }
+    function enableInputs() {
+        $("#id_start_date, #id_end_date, #id_items").prop("disabled", false);
+        $("#updateBtn, #aggregateBtn").removeClass("disabled");
+    }
+    function showSpinner() {
+        $(".overlay").removeClass("d-none");
+    }
+    function hideSpinner() {
+        $(".overlay").addClass("d-none");
+    }
     function getFormInput(addToPage) {
         var page_num = parseInt($("#page_num").val()) + addToPage;
         if (addToPage == 0) {
@@ -308,9 +339,13 @@
                     // update total amount
                     $("#total_amt").text("Total: 0");
                 }
+                hideSpinner();
+                enableInputs();
             },
             error: (error) => {
-                console.log(error)
+                console.log(error);
+                hideSpinner();
+                enableInputs();
             }
         });
     }
@@ -321,6 +356,7 @@
         });
     }
     $(document).ready(function () {
+        hideSpinner();
         // datepickers
         $("#id_start_date").datepicker({
             dateFormat: "yy-mm-dd",
@@ -354,16 +390,22 @@
         // events that will update table
         $("#filter_records_form").submit(function (event) {
             event.preventDefault();
+            disableInputs();
+            showSpinner();
             $("#num_items_for_post").val($("#id_items").val())
             pullOrders(getFormInput(0), token);
             $("#page_num").val(1);
         });
         $("#prev_page").click(function (event) {
             event.preventDefault();
+            disableInputs();
+            showSpinner();
             pullOrders(getFormInput(-1), token);
             $("#page_num").val(parseInt($("#page_num").val()) - 1);
         });
         $("#next_page").click(function (event) {
+            disableInputs();
+            showSpinner();
             event.preventDefault();
             pullOrders(getFormInput(1), token);
             $("#page_num").val(parseInt($("#page_num").val()) + 1);
