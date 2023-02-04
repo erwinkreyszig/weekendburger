@@ -4,7 +4,7 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import F, When, Case, Value, Q
+from django.db.models import F, When, Case, Value, Q, Prefetch
 from django.forms.formsets import formset_factory
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -29,7 +29,7 @@ from .forms import (
     SidesOrderContentFormSet,
     AddOnsOrderContentFormSet,
 )
-from .models import Order, OrderContent, Product
+from .models import Order, OrderContent, Product, Category
 from .permissions import user_can_do, CAN_ADD_ORDER_PERM, CAN_VIEW_ORDER_PERM, CAN_VIEW_REPORT_PERM
 
 # Create your views here.
@@ -100,9 +100,13 @@ def order_list(request):
     page_obj = paginator.get_page(page_num)
     # change this to a dict with order pk as keys to be able to be populated with order contents
     order_data = {order.get("pk"): order for order in list(page_obj.object_list)}
+    category_qs = Category.objects.only("name")
+    product_qs = Product.objects.prefetch_related(Prefetch("category", queryset=category_qs)).only(
+        "name", "category__namme"
+    )
     order_contents = (
         OrderContent.objects.filter(order_id__in=order_data)
-        .select_related("product", "product_category")
+        .prefetch_related(Prefetch("product", queryset=product_qs))
         .annotate(
             name=F("product__name"),
             category=F("product__category__name"),
@@ -327,10 +331,14 @@ def aggregate_orders(request, fromdate=None, todate=None):
     order_pks = Order.objects.filter(
         Q(order_timestamp__gte=timezone.make_aware(fromdate)) & Q(order_timestamp__lte=timezone.make_aware(todate))
     ).values_list("pk", flat=True)
+    category_qs = Category.objects.only("name")
+    product__qs = Product.objects.prefetch_related(Prefetch("category", queryset=category_qs)).only(
+        "category__name", "name"
+    )
     contents = (
-        OrderContent.objects.select_related("product")
+        OrderContent.objects.prefetch_related(Prefetch("product", queryset=product__qs))
         .filter(order__pk__in=order_pks)
-        .order_by("product__category__name")
+        .order_by("product__category__name", "product__name")
     )
     aggregated = {}
     grand_total = 0
