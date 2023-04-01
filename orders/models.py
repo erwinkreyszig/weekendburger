@@ -110,8 +110,8 @@ class AddOn(models.Model):
     This should only be attached to order contents with product.add_on_allowed = True
     """
 
-    order_content = models.ForeignKey(OrderContent, on_delete=models.RESTRICT)
-    product = models.ForeignKey(Product, on_delete=models.RESTRICT)
+    order_content = models.ForeignKey(OrderContent, on_delete=models.RESTRICT, default=None, null=True)
+    product = models.ForeignKey(Product, on_delete=models.RESTRICT, default=None, null=True)
     qty = models.PositiveBigIntegerField(default=1)
     price_at_order = models.IntegerField(default=0)
 
