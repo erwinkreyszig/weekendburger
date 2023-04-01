@@ -53,6 +53,25 @@ class Product(models.Model):
         return reverse("product", args=[str(self.id)])
 
 
+class AddOn(models.model):
+    """Model representing a product add-on"""
+
+    name = models.CharField(max_length=255, help_text="Enter an add-on name")
+    desc = models.TextField(null=True, blank=True, help_text="Add-on description goes here")
+    unit_price = models.IntegerField()
+    active = models.BooleanField(defaul=True)
+    added_timestamp = models.DateTimeField(auto_now_add=True)
+    added_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["name", "active"]
+
+    def __str__(self):
+        return self.name
+
+
 class Order(models.Model):
     """Model representing an order"""
 
