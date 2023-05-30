@@ -1,0 +1,791 @@
+{% extends "base_generic.html" %}]
+
+{% block content %}
+<style>
+    .category-block {
+        margin-bottom: 4px;
+    }
+</style>
+<h2>New Order</h2>
+<hr />
+<form method="post" id="new-order-form">
+    <div class="container-fluid" style="padding-top: 20px;">
+        <div class="row mb-3">
+            {% csrf_token %}
+            <!-- order date input -->
+            <div class="col-sm mb-1">
+                <div class="form-floating">
+                    {{ order_form.order_date }}
+                    {{ order_form.order_date.label_tag }}
+                    <span style="color:red;">{{ order_form.order_date.errors }}</span>
+                </div>
+            </div>
+            <!-- order type input -->
+            <div class="col-sm mb-1">
+                <div class="form-floating">
+                    {{ order_form.order_type }}
+                    {{ order_form.order_type.label_tag }}
+                    {{ order_form.order_type.errors }}
+                </div>
+            </div>
+            <!-- payment option input -->
+            <div class="col-sm" mb-1>
+                <div class="form-floating">
+                    {{ order_form.payment_option }}
+                    {{ order_form.payment_option.label_tag }}
+                    <span style="color:red;">{{ order_form.payment_option.errors }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <!-- category dropdown -->
+            <div class="col-sm mb-1">
+                <div class="form-floating">
+                    <select id="category-selector" class="form-control" name="category-selector">
+                        <option value="">Loading categories...</option>
+                    </select>
+                    <label for="category-selector">Category:</label>
+                </div>
+            </div>
+            <div class="col-sm mb-1">
+                <div class="row mb-1">
+                    <!-- product dropdown -->
+                    <div class="col">
+                        <div class="form-floating">
+                            <select id="product-selector" class="form-control" name="product-selector">
+                                <option value="">Loading products...</option>
+                            </select>
+                            <label for="product-selector">Product:</label>
+                        </div>
+                    </div>
+                </div>
+                <!-- qty controls -->
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="form-floating">
+                            <input type="text" name="product-qty-placeholder" placeholder="0" class="form-control" maxlength="2" id="product-qty-placeholder" disabled="" />
+                            <label for="product-qty-placeholder">Qty:</label>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="btn-group" role="group" aria-label="increase-decrease-product-qty">
+                            <button type="button" class="btn btn-outline-primary btn-lg" id="product-increase-qty-btn" data-toggle="tooltip" data-placement="top" title="Increase quantity">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-square-fill" viewBox="0 0 16 16">
+                                    <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm6.5 4.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3a.5.5 0 0 1 1 0z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-lg" id="product-decrease-qty-btn" data-toggle="tooltip" data-placement="top" title="Decrease quantity">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-square-fill" viewBox="0 0 16 16">
+                                    <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm2.5 7.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row text-center mb-2">
+            <!-- add product to order button -->
+            <div class="col-sm-4 offset-sm-4">
+                <button type="button" class="btn btn-primary btn-lg" id="add-to-order-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"></path>
+                    </svg>
+                    Add
+                </button>
+            </div>
+        </div>
+        <div class="row mb-2">
+            <!-- table of currently added products to order -->
+            <div class="col">
+                <table id="order-contents-table" class="table table-hover">
+                    <thead>
+                        <th scope="col">Category</th>
+                        <th scope="col">Product</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Add-ons</th>
+                        <th scope="col">Delete?</th>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row text-center">
+            <!-- create order button -->
+            <div class="col-sm-4 offset-sm-4">
+                <button type="submit" class="btn btn-primary btn-lg" id="create-order-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart4" viewBox="0 0 16 16">
+                        <path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5zM3.14 5l.5 2H5V5H3.14zM6 5v2h2V5H6zm3 0v2h2V5H9zm3 0v2h1.36l.5-2H12zm1.11 3H12v2h.61l.5-2zM11 8H9v2h2V8zM8 8H6v2h2V8zM5 8H3.89l.5 2H5V8zm0 5a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"/>
+                    </svg>
+                    Create order
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="modal fade" id="msg-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="msg-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-4" id="msg-modal-title"></h1>
+            </div>
+            <div class="modal-body" id="msg-modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add-on-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="add-on-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="add-on-modal-title">
+                    <span class="badge text-bg-info">Add ons for <u><span id="add-on-for-product"></span></u></span>
+                </h1>
+            </div>
+            <div class="modal-body" id="add-on-modal-body">
+                <div class="row g-2">
+                    <div class="col-md">
+                        <div class="form-floating">
+                            <select id="add-on-selector" class="form-control" name="add-on-selector">
+                                <option value="">Loading add-ons...</option>
+                            </select>
+                            <label for="add-on-selector">Add-on:</label>
+                        </div>
+                    </div>
+                    <div class="col-md">
+                        <div class="form-floating">
+                            <input type="text" name="add-on-qty-placeholder" placeholder="0" class="form-control" maxlength="2" id="add-on-qty-placeholder" disabled="" />
+                            <label for="add-on-qty-placeholder">Qty:</label>
+                        </div>
+                    </div>
+                    <div class="col-md">
+                        <div class="btn-group" role="group" aria-label="increase-decrease-add-on-qty">
+                            <button type="button" class="btn btn-outline-primary btn-lg" id="add-on-increase-qty-btn" data-toggle="tooltip" data-placement="top" title="Increase quantity">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-square-fill" viewBox="0 0 16 16">
+                                    <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm6.5 4.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3a.5.5 0 0 1 1 0z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-lg" id="add-on-decrease-qty-btn" data-toggle="tooltip" data-placement="top" title="Decrease quantity">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-square-fill" viewBox="0 0 16 16">
+                                    <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm2.5 7.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md">
+                        <button class="btn btn-primary add-add-on">Add</button>
+                    </div>
+                </div>
+                <div class="row g-2 mb-1">
+                    <div class="col-md" id="add-on-msg"></div>
+                </div>
+                <table class="table table-sm" id="add-on-table">
+                    <tbody class="table-group-divider">
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="add-on-modal-save" style="margin-right: 4px;">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="order-confirm-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="order-confirm-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-4">
+                    <span class="badge text-bg-primary">Confirm order</span>
+                    <span class="badge text-bg-info" id="confirm-order-msg"></span>
+                </h1>
+            </div>
+            <div class="modal-body">
+                <table class="table-sm" id="order-info">
+                    <tbody>
+                        <tr>
+                            <td>Order Date:</td>
+                            <td id="order-info-date" class="fw-bold"></td>
+                        </tr>
+                        <tr>
+                            <td>Type:</td>
+                            <td id="order-info-type" class="fw-bold"></td>
+                        </tr>
+                        <tr>
+                            <td>Payment Option:</td>
+                            <td id="order-info-payment" class="fw-bold"></td>
+                        </tr>
+                        <tr>
+                            <td>Total:</td>
+                            <td id="order-info-total" class="fw-bold"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <hr />
+                <table class="table table-hover table-sm" id="order-content">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="text-center align-middle">Product</th>
+                            <th rowspan="2" class="text-center align-middle">Price</th>
+                            <th rowspan="2" class="text-center align-middle">Quantity</th>
+                            <th rowspan="2" class="text-center align-middle">Subtotal</th>
+                            <th colspan="4" class="text-center align-middle">Add-ons</th>
+                            <th rowspan="2" class="text-center align-middle">Total</th>
+                        </tr>
+                        <tr>
+                            <th class="text-center align-middle">Add-on</th>
+                            <th class="text-center align-middle">Price</th>
+                            <th class="text-center align-middle">Quantity</th>
+                            <th class="text-center align-middle">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="order-confirm-cancel-btn">Cancel</button>
+                <button type="button" class="btn btn-warning d-none" id="order-print-btn">Print</button>
+                <button type="button" class="btn btn-primary" id="order-confirm-proceed-btn">Place Order</button>
+                <button type="button" class="btn btn-success d-none" id="order-confirm-close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // global vars
+    var data_ = null;
+    var prices = null;
+    var addOnOptionsMaster = [];
+    var categoryOptions = [];
+    var productData = null;
+    /*
+    currentOrder = {"product-name": {"qty": qty, "add-ons": {"add-on-name": qty, "add-on-name": qty}},
+                    "product-name": {"qty": qty},
+                    "product-name": {"qty": qty, "add-ons": {"add-on-name": qty, "add-on-name": qty, "add-on-name": qty}},
+                    ...}
+    */
+    var currentOrder = {};
+    // ui moving parts
+    var orderDate = $("#id_order_date");
+    var orderType = $("#id_order_type");
+    var paymentOption = $("#id_payment_option");
+    var categoryDropdown = $("#category-selector");
+    var productDropdown = $("#product-selector");
+    var addOnDropdown = $("#add-on-selector");
+    var ordersList = $("#order-contents-table tbody");
+    var addToOrderBtn = $("#add-to-order-btn");
+    var productQty = $("#product-qty-placeholder");
+    var productQtyUp = $("#product-increase-qty-btn");
+    var productQtyDown = $("#product-decrease-qty-btn");
+    var deleteSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16"><path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"></path></svg>';
+    var msgModal = $("#msg-modal");
+    var msgModalTitle = $("#msg-modal-title");
+    var msgModalBody = $("#msg-modal-body");
+    var addOnModal = $("#add-on-modal");
+    var addOnModalTitle = $("#add-on-modal-title");
+    var productForAddOn = null;
+    var addOnTable = $("#add-on-table")
+
+    function getSelectedItem(dropdown) {
+        return [dropdown.val(), dropdown.find(":selected").text()];
+    };
+    function getProductOptionsForCategory(allProducts, category) {
+        var products = allProducts[category];
+        var currentProducts = [];
+        for (let p in currentOrder) {
+            currentProducts.push(p);
+        }
+        var productOptions = [];
+        for (let i = 0; i < products.length; i++) {
+            if (currentProducts.includes(products[i]["name"])) {
+                continue;
+            }
+            productOptions.push([products[i]["pk"], products[i]["name"]])
+        }
+        return productOptions;
+    };
+    function getAddOnOptionsForProduct(currentOrder, product, addOnOptions) {
+        // check if product can have add-ons
+        var selectedCategory = getSelectedItem(categoryDropdown)[1];
+        for (let i = 0; i < productData[selectedCategory].length; i++) {
+            var aProduct = productData[selectedCategory][i];
+            if (product == aProduct["name"] && aProduct["add_on_allowed"] == false) {
+                return null;
+            }
+        }
+        // return all add-on options if there aren't any yet
+        if (currentOrder[product] == undefined || currentOrder[product]["add-ons"] == undefined) {
+            return addOnOptions;
+        }
+        var currentAddOns = [];
+        for (let addOn in currentOrder[product]["add-ons"]) {
+            currentAddOns.push(addOn);
+        }
+        var availableAddOns = [];
+        for (let i = 0; i < addOnOptions.length; i++) {
+            let addOnOption = addOnOptions[i];
+            if (currentAddOns.includes(addOnOption[1])) {
+                continue;  // skip this as it has already been selected previously
+            }
+            availableAddOns.push(addOnOption);
+        }
+        return availableAddOns;
+    };
+    function populateDropdown(dropdown, options, excludes=null) {
+        var hasOptions = false;
+        // disable first before populating
+        dropdown.attr("disabled", true);
+        // remove current contents
+        dropdown.empty();
+        // add options
+        for (let i = 0; i < options.length; i++) {
+            key = options[i][0];
+            value = options[i][1];
+            if (excludes != null && excludes.includes(value)) {
+                continue;
+            }
+            dropdown.append('<option value="' + key + '">' + value + '</option>');
+            hasOptions = true;
+        }
+        // re-enable dropdown
+        if (hasOptions) {
+            dropdown.removeAttr("disabled");
+        }
+        return hasOptions;
+    };
+    function addRowToOrderList(data) {
+        var addOns = "<span class='badge text-bg-info'>No add-ons.</span>";
+        var hasAddOn = data["add-ons"] != null;
+        if (hasAddOn) {
+            addOns = "<button type='button' class='btn btn-primary btn-sm edit-add-on'>" +
+                        "<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-pencil-square' viewBox='0 0 16 16'>" +
+                            "<path d='M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z'/>" + 
+                            "<path fill-rule='evenodd' d='M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z'/>" +
+                        "</svg>" + 
+                        "Edit" +
+                    "</button>";
+        }
+        var row = "<tr id='" + data["product"].replaceAll(" ", "-") + "' class='order-row'>" +
+            "<td>" + data["category"] + "</td>" +
+            "<td>" + data["product"] + "</td>" +
+            "<td>" + data["qty"] + "</td>" +
+            "<td>" + 
+                addOns + 
+            "</td>" + 
+            "<td>" +
+                "<button type='button' class='btn btn-primary btn-sm delete-item'>" + 
+                    deleteSVG +
+                "</button>" +
+            "</td>" + 
+        "</tr>";
+        ordersList.append(row);
+        // attach onclick handler to button .edit-add-on
+        if (hasAddOn) {
+            ordersList.on("click", "button.edit-add-on", function () {
+                var theRow = $(this).parents(".order-row")[0];
+                var product = $(theRow.children[1]).text();
+                productForAddOn = product;
+                addOnModal.modal("show");
+            });
+        }
+        // attach onclick handler to delete button .delete-item
+        ordersList.on("click", "button.delete-item", function () {
+            var theRow = $(this).parents(".order-row")[0];
+            var product = $(theRow.children[1]).text();
+            delete currentOrder[product];
+            $(theRow).remove();
+            // re-populate product dropdown
+            var selectedCategory = getSelectedItem(categoryDropdown)[1];
+            var productOptions = getProductOptionsForCategory(productData, selectedCategory);
+            var dropdownHasOptions = populateDropdown(productDropdown, productOptions);
+            toggleAddBtn(dropdownHasOptions, addToOrderBtn);
+            productQty.val("0");
+        });
+    };
+    function addOnRowDeleteHandler() {
+        var tds = $(this).parents("tr").find("td");
+        var theAddOn = $(tds[0]).text();
+        // remove from the dict
+        delete currentOrder[productForAddOn]["add-ons"][theAddOn];
+        // reload dropdown plus the one about to be deleted
+        var addOnOpts = getAddOnOptionsForProduct(currentOrder, productForAddOn, addOnOptionsMaster);
+        var dropdownHasOptions = populateDropdown(addOnDropdown, addOnOpts);
+        var theModal = $(this).parents("div#add-on-modal");
+        toggleAddBtn(dropdownHasOptions, theModal.find("button.add-add-on"));
+        // reset quantity to zero
+        theModal.find("#add-on-qty-placeholder").val("0");
+        // then delete the row
+        $(this).parents("tr").remove();
+    };
+    function toggleAddBtn(value, thisBtn) {
+        if (value) {
+            thisBtn.removeAttr("disabled");
+        } else{
+            thisBtn.attr("disabled", true);
+        }
+    };
+    function populateOrderConfirmTable() {
+        // order info
+        $("#order-info-date").text($("#id_order_date").val());
+        $("#order-info-type").text($("#id_order_type option:selected").text());
+        $("#order-info-payment").text($("#id_payment_option option:selected").text());
+        // order content
+        var total = 0;
+        var orderContentTable = $("#order-content").find("tbody");
+        orderContentTable.empty();
+        for (product in currentOrder) {
+            var rowTotal = 0;
+            var orderData = currentOrder[product];
+            var addOns = orderData["add-ons"];
+            // convert addOns to list of dicts because items after the first one
+            // need to be written out in a separate tr
+            if (addOns != undefined) {
+                addOns = [];
+                for (addOnName in orderData["add-ons"]) {
+                    addOns.push([addOnName, orderData["add-ons"][addOnName]])
+                }
+            }
+            var qty = orderData["qty"];
+            var productPrice = prices[product];
+            var td_tag = "<td class='text-center align-middle'>";
+            if (addOns != undefined) {
+                td_tag = "<td rowspan='" + addOns.length + "' class='text-center align-middle'>";
+            }
+            var productSubTotal = parseInt(productPrice) * parseInt(qty);
+            rowTotal += productSubTotal;
+            var tr_str = "<tr>" +
+                    td_tag + product + "</td>" +
+                    td_tag + productPrice + "</td>" +
+                    td_tag + qty + "</td>" +
+                    td_tag + productSubTotal + "</td>";
+            if (addOns == undefined) {
+                tr_str += "<td colspan='4' class='text-center align-middle'>" +
+                    "<span class='badge text-bg-info'>N/A</span>" +
+                "</td>";
+            } else {
+                // add first addOn here
+                var firstAddOn = addOns[0];  // [name, price]
+                var addOnSubtotal = parseInt(firstAddOn[1]) * parseInt(prices[firstAddOn[0]]);
+                tr_str += "<td class='text-center align-middle'>" + firstAddOn[0] + "</td>" + 
+                    "<td class='text-center align-middle'>" + prices[firstAddOn[0]] + "</td>" + 
+                    "<td class='text-center align-middle'>" + firstAddOn[1] + "</td>" + 
+                    "<td class='text-center align-middle'>" + addOnSubtotal + "</td>";
+                // add amounts of addons here
+                for (idx in addOns) {
+                    var addOn = addOns[idx];
+                    rowTotal += (parseInt(addOn[1]) * parseInt(prices[addOn[0]]))
+                }
+            }
+            tr_str += td_tag + rowTotal + "</td>" +
+                "</tr>";
+            total += rowTotal;
+            orderContentTable.append(tr_str)
+            // add the rest of the addOns here
+            if (addOns != undefined && addOns.length != 1) {
+                var theRestOfAddOns = addOns.slice(1);
+                for (idx in theRestOfAddOns) {
+                    var subRow = theRestOfAddOns[idx];
+                    var addOnSubtotal = parseInt(subRow[1]) * parseInt(prices[subRow[0]]);
+                    rowTotal += addOnSubtotal;
+                    var tr_str = "<tr>" +
+                            "<td class='text-center align-middle'>" + subRow[0] + "</td>" +
+                            "<td class='text-center align-middle'>" + prices[subRow[0]] + "</td>" +
+                            "<td class='text-center align-middle'>" + subRow[1] + "</td>" +
+                            "<td class='text-center align-middle'>" + addOnSubtotal + "</td>" +
+                        "</tr>";
+                    orderContentTable.append(tr_str);
+                }
+            }
+        }
+        $("#order-info-total").text(total);
+    };
+    function resetForm() {
+        currentOrder = {}
+        $(categoryDropdown.find("option")[0]).prop("selected", true);
+        categoryDropdown.trigger("change");
+        // empty out orders table
+        ordersList.empty();
+        // TODO: reset order date, order type, and payment option
+    };
+
+    $(document).ready(function () {
+        // TODO: disable all buttons first
+        $("#id_order_date").datepicker({
+            dateFormat: "yy-mm-dd",
+            showAnim: "fadeIn",
+            maxDate: 0,
+        });
+        // get the current prices of products
+        $.ajax({
+           url: "{% url 'product-prices' %}",
+           type: "GET",
+           dataType: "json",
+            success: (data) => {
+                prices = data;
+            },
+            error: (error) => {
+                console.log(error);
+            }
+        });
+        // pull product data
+        $.ajax({
+            url: "{% url 'products-all' %}",
+            type: "GET",
+            dataType: "json",
+            success: (data) => {
+                data_ = data;
+                productData = data["product_data"];
+                categoryData = data["category_data"];
+                // get add-on options
+                addOns = productData["Add-ons"];
+                for (let i = 0; i < addOns.length; i++) {
+                    addOnOptionsMaster.push([addOns[i]["pk"], addOns[i]["name"]]);
+                }
+                // format category data for dropdown
+                for (let categ in categoryData) {
+                    if (categoryData[categ] == "Add-ons") {
+                        continue;  // skip add-ons 
+                    }
+                    categoryOptions.push([categ, categoryData[categ]]);
+                }
+                // populate category dropdown
+                populateDropdown(categoryDropdown, categoryOptions);
+                // attach category dropdown onchange
+                categoryDropdown.on("change", function() {
+                    var selectedCategory = getSelectedItem(categoryDropdown);
+                    var productOptions = getProductOptionsForCategory(productData, selectedCategory[1]);
+                    var dropdownHasOptions = populateDropdown(productDropdown, productOptions);
+                    toggleAddBtn(dropdownHasOptions, addToOrderBtn);
+                    productQty.val("0");
+                });
+                // trigger category dropdown onchange
+                categoryDropdown.trigger("change");
+                // reset qty to zero when product changes
+                productDropdown.on("change", function() {
+                    productQty.val("0");
+                });
+                // attach Add button onclick
+                addToOrderBtn.on("click", function() {
+                    var selectedCategory = getSelectedItem(categoryDropdown)[1];
+                    var selectedProduct = getSelectedItem(productDropdown)[1];
+                    var productQtyVal = productQty.val();
+                    if (parseInt(productQtyVal) == 0) {
+                        msgModalTitle.empty();
+                        msgModalTitle.append("<span class='badge text-bg-danger'>Error</span>");
+                        msgModalBody.empty();
+                        msgModalBody.text("Quantity cannot be zero.");
+                        msgModal.modal("show");
+                    } else {
+                        if (currentOrder[selectedProduct] == undefined) {
+                            currentOrder[selectedProduct] = {};
+                        }
+                        currentOrder[selectedProduct]["qty"] = productQtyVal;
+
+                        var addOnOpts = getAddOnOptionsForProduct(currentOrder, selectedProduct, addOnOptionsMaster);
+                        itemData = {"category": selectedCategory, "product": selectedProduct, "qty": productQtyVal, "add-ons": addOnOpts};
+                        addRowToOrderList(itemData);
+                        // re-populate product dropdown minus the one previously added
+                        var productOptions = getProductOptionsForCategory(productData, selectedCategory);
+                        var dropdownHasOptions = populateDropdown(productDropdown, productOptions);
+                        toggleAddBtn(dropdownHasOptions, addToOrderBtn);
+                        productQty.val("0");
+                    }
+                });
+                // attach button handlers for increase/decrease product qty
+                productQtyUp.on("click", function() {
+                    var productQtyVal = productQty.val();
+                    productQty.val(parseInt(productQtyVal) + 1);
+                });
+                productQtyDown.on("click", function() {
+                    var productQtyVal = productQty.val();
+                    if (productQtyVal != "0") {
+                        productQty.val(parseInt(productQtyVal) - 1);
+                    }
+                });
+                // handlers for modal functions
+                addOnModal.on("show.bs.modal", function() {
+                    // clear error message
+                    addOnModal.find("#add-on-msg").empty();
+                    // populate header
+                    $(this).find("#add-on-for-product").empty().text(productForAddOn);
+                    var addBtn = $(this).find("button.add-add-on");
+                    // need to populate table if there are currently picked add-ons, after emptying
+                    addOnTable.find("tbody").empty();
+                    var pickedAddOns = currentOrder[productForAddOn]["add-ons"];
+                    for (anAddOn in pickedAddOns) {
+                        var row_str = "<tr>" +
+                                "<td>" + anAddOn + "</td>" +
+                                "<td>" + pickedAddOns[anAddOn] + "</td>" +
+                                "<td>" +
+                                    "<button type='button' class='btn btn-primary btn-sm delete-add-on'>" + 
+                                        deleteSVG +
+                                    "</button>" +
+                                "</td>" +
+                            "</tr>";
+                        var row = $(row_str);
+                        // handler for when the row's delete button is clicked
+                        row.find("button.delete-add-on").on("click", addOnRowDeleteHandler);
+                        // add row to add-on table
+                        addOnTable.find("tbody").append(row);
+                    }
+                    addBtn.attr("disabled", true);
+                    var qtyIncreaseBtn = $(this).find("#add-on-increase-qty-btn");
+                    var qtyDecreaseBtn = $(this).find("#add-on-decrease-qty-btn");
+                    var addOnQty = $("#add-on-qty-placeholder");
+                    addOnQty.val("0");
+                    addBtn.on("click", function() {
+                        if (parseInt(addOnQty.val()) == 0) {
+                            addOnModal.find("#add-on-msg").empty().append("<span class='badge text-bg-danger'>Error: Quantity cannot be zero.</span>");
+                        } else{
+                            addOnModal.find("#add-on-msg").empty();
+                            var selectedAddOn = getSelectedItem(addOnDropdown);
+                            if (currentOrder[productForAddOn]["add-ons"] == undefined) {
+                                currentOrder[productForAddOn]["add-ons"] = {};
+                            }
+                            if (currentOrder[productForAddOn]["add-ons"][selectedAddOn[1]] == undefined) {
+                                currentOrder[productForAddOn]["add-ons"][selectedAddOn[1]] = 0;
+                            }
+                            currentOrder[productForAddOn]["add-ons"][selectedAddOn[1]] += parseInt(addOnQty.val());
+                            // reload dropdown minus the one previously selected
+                            var addOnOpts = getAddOnOptionsForProduct(currentOrder, productForAddOn, addOnOptionsMaster);
+                            var dropdownHasOptions = populateDropdown(addOnDropdown, addOnOpts);
+                            toggleAddBtn(dropdownHasOptions, addBtn);
+                            // add a row on the add-on table
+                            var row_str = "<tr>" + 
+                                    "<td>" + selectedAddOn[1] + "</td>" +
+                                    "<td>" + addOnQty.val() + "</td>" +
+                                    "<td>" + 
+                                        "<button type='button' class='btn btn-primary btn-sm delete-add-on'>" + 
+                                            deleteSVG +
+                                        "</button>" +
+                                    "</td>" +
+                                "</tr>";
+                            var row = $(row_str);
+                            // handler for when the row's delete button is clicked
+                            row.find("button.delete-add-on").on("click", addOnRowDeleteHandler);
+                            // add row to add-on table
+                            addOnTable.find("tbody").append(row);
+                            // reset count to 0
+                            addOnQty.val("0");
+                        }
+                    });
+                    qtyIncreaseBtn.on("click", function() {
+                        var addOnQtyVal = addOnQty.val();
+                        addOnQty.val(parseInt(addOnQtyVal) + 1);
+                    });
+                    qtyDecreaseBtn.on("click", function() {
+                        var addOnQtyVal = addOnQty.val();
+                        if (addOnQtyVal != "0") {
+                            addOnQty.val(parseInt(addOnQtyVal) - 1);
+                        }
+                    });
+                });
+                addOnModal.on("shown.bs.modal", function() {
+                    var addOnOpts = getAddOnOptionsForProduct(currentOrder, productForAddOn, addOnOptionsMaster);
+                    var dropdownHasOptions = populateDropdown(addOnDropdown, addOnOpts);
+                    var addBtn = $(this).find("button.add-add-on");
+                    toggleAddBtn(dropdownHasOptions, addBtn);
+                    $(this).find("button.add-add-on").removeAttr("disabled");
+                });
+                addOnModal.on("hide.bs.modal", function() {
+                    // had to add these as successive on clicks on the same button stacks (one click runs multiple times)
+                    $(this).find("button.add-add-on").off("click");
+                    $(this).find("#add-on-increase-qty-btn").off("click");
+                    $(this).find("#add-on-decrease-qty-btn").off("click");
+                });
+                // TODO: enable all buttons
+            },
+            error: (error) => {
+                console.log(error);
+            }
+        });
+        // handler for create order button
+        $("#new-order-form").submit(function (event, options) {
+            event.preventDefault();
+            options = options || {};
+            if (!options.confirmed) {  // clicking the create order button goes here
+                populateOrderConfirmTable();
+                $("#confirm-order-msg").empty();
+                $("#order-confirm-modal").modal("show");
+                // show Proceed, Cancel buttons & hide Close, Print buttons
+                $("#order-print-btn").addClass("d-none").addClass("disabled");
+                $("#order-confirm-close-btn").addClass("d-none").addClass("disabled");
+                $("#order-confirm-cancel-btn").removeClass("d-none").removeClass("disabled");
+                $("#order-confirm-proceed-btn").removeClass("d-none").removeClass("disabled");
+                $("#order-confirm-proceed-btn").click(function (event) {
+                    $("#new-order-form").trigger("submit", {"confirmed": true});
+                });
+                // remove click handler on button so it won't fire multiple times later
+                $("#order-confirm-modal").on("hide.bs.modal", function() {
+                    $("#order-confirm-proceed-btn").unbind("click");
+                    $("#order-print-btn").unbind("click");
+                    $("#order-confirm-close-btn").unbind("click");
+                });
+            } else {
+                if (jQuery.isEmptyObject(currentOrder)) {
+                    $("#confirm-order-msg").removeClass("d-none").removeClass("text-bg-success").removeClass("text-bg-info").addClass("text-bg-danger").text("Order is empty.");
+                    return;
+                }
+                $("#order-confirm-proceed-btn").addClass("disabled").unbind("click");
+                $("#order-confirm-cancel-btn").addClass("disabled");
+                $("#confirm-order-msg").removeClass("d-none").removeClass("text-bg-success").removeClass("text-bg-danger").addClass("text-bg-info").text("Creating order...");
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'new-order' %}",
+                    data: {
+                        "csrfmiddlewaretoken": $("input[name='csrfmiddlewaretoken']").val(),
+                        "data": JSON.stringify(currentOrder),
+                        "order_date": $("#order-info-date").text(),
+                        "order_type": $("#order-info-type").text(),
+                        "payment_type": $("#order-info-payment").text(),
+                        "total": $("#order-info-total").text()
+                    },
+                    success: (data) => {
+                        if (data.saved) {
+                            // update message
+                            $("#confirm-order-msg").removeClass("d-none").removeClass("text-bg-info").removeClass("text-bg-danger").addClass("text-bg-success").text("Order created!");
+                            // show Close, Print buttons & hide Proceed, Cancel buttons
+                            $("#order-print-btn, #order-confirm-close-btn").removeClass("d-none").removeClass("disabled");
+                            $("#order-confirm-proceed-btn, #order-confirm-cancel-btn").addClass("d-none").addClass("disabled");
+                            $("#order-confirm-proceed-btn").unbind("click");
+                            // click handler for print button: open order summary in a new page
+                            $("#order-print-btn").bind("click", function(event) {
+                                window.open("{% url 'print-order' %}".concat(data.ref)).focus();
+                            });
+                            // click handler for close button: reset form when close is clicked
+                            $("#order-confirm-close-btn").on("click", function() {
+                                $("#order-confirm-modal").modal("hide");
+                                resetForm();
+                            });
+                        } else {
+                            // update with error message
+                            $("#confirm-order-msg").removeClass("d-none").removeClass("text-bg-info").removeClass("text-bg-success").addClass("text-bg-danger").text("An error has occurred. Please try again.");
+                            // make Proceed & Cancel button clickable again
+                            $("#order-confirm-proceed-btn, #order-confirm-cancel-btn").removeClass("d-none").removeClass("disabled");
+                            $("#order-confirm-proceed-btn").click(function (event) {
+                                $("#new-order-form").trigger("submit", {"confirmed": true});
+                            });
+                        }
+                    },
+                    error: (error) => {
+                        console.log(error);
+                        // just do the same as when data.saved is False
+                        $("#confirm-order-msg").removeClass("d-none").removeClass("text-bg-info").removeClass("text-bg-success").addClass("text-bg-danger").text("An error has occurred. Please try again.");
+                        $("#order-confirm-proceed-btn").click(function (event) {
+                            $("#new-order-form").trigger("submit", {"confirmed": true});
+                        });
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

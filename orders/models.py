@@ -17,6 +17,7 @@ class Category(models.Model):
 
     name = models.CharField(max_length=40, unique=True)
     desc = models.CharField(max_length=100, null=True, blank=True)
+    display_order = models.IntegerField(default=0)
 
     history = HistoricalRecords()
 

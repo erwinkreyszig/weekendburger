@@ -5,14 +5,20 @@ from .models import Category, Product, Order, OrderContent, PaymentOption, AddOn
 
 # Register your models here.
 
-admin.site.register(Category)
 admin.site.register(PaymentOption)
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "display_order")
+    list_editable = ("display_order",)
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ("get_category", "name", "unit_price", "active")
     list_filter = ("category", "active")
+    list_editable = ("name", "unit_price", "active")
 
 
 class AddOnAdminInline(admin.TabularInline):
