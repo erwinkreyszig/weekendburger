@@ -1,6 +1,8 @@
+import pytz
 from django.contrib import admin
 from django.contrib.admin import DateFieldListFilter
 from .models import Category, Product, Order, OrderContent, PaymentOption, AddOn
+from weekendburger.settings import TIME_ZONE
 
 
 # Register your models here.
@@ -34,6 +36,7 @@ class OrderAdminInline(admin.TabularInline):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
+        "pk",
         "order_timestamp",
         "order_type",
         "taken_by",
@@ -53,11 +56,24 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(OrderContent)
 class OrderContentAdmin(admin.ModelAdmin):
-    list_display = ("order", "product", "qty")
+    list_display = ("pk", "order_pk", "order_info", "product", "qty")
 
     inlines = [AddOnAdminInline]
+
+    @admin.display(empty_value="???")
+    def order_pk(self, obj):
+        return obj.order.pk
+
+    @admin.display(empty_value="???")
+    def order_info(self, obj):
+        localized = obj.order.order_timestamp.astimezone(pytz.timezone(TIME_ZONE))
+        return f"{localized.strftime('%b %d, %Y, %I:%M %p')} - {obj.order.taken_by.username}"
 
 
 @admin.register(AddOn)
 class AddOnAdmin(admin.ModelAdmin):
-    list_display = ("order_content", "product", "qty")
+    list_display = ("pk", "order_content_pk", "order_content", "product", "qty")
+
+    @admin.display(empty_value="???")
+    def order_content_pk(self, obj):
+        return obj.order_content.pk
