@@ -1,4 +1,4 @@
-import pytz
+import pytz, json, re
 from weekendburger.settings import TIME_ZONE
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
@@ -29,7 +29,7 @@ from .forms import (
     SidesOrderContentFormSet,
     AddOnsOrderContentFormSet,
 )
-from .models import Order, OrderContent, Product, Category
+from .models import Order, OrderContent, Product, Category, PaymentOption, AddOn
 from .permissions import user_can_do, CAN_ADD_ORDER_PERM, CAN_VIEW_ORDER_PERM, CAN_VIEW_REPORT_PERM
 
 # Create your views here.
@@ -159,6 +159,117 @@ def order_list(request):
 
 @login_required
 @user_can_do(permissions=(CAN_ADD_ORDER_PERM,))
+def get_products(request):
+    if request.method != "GET":
+        return JsonResponse({})
+    products = (
+        Product.objects.filter(active=True)
+        .select_related("category")
+        .values("pk", "name", "desc", "category__name", "category__pk", "unit_price", "add_on_allowed")
+        .order_by("category__display_order")
+    )
+    categorized_products = {}
+    categories = []
+    category_data = {}
+    for product in products:
+        category_pk = product["category__pk"]
+        category_name = product["category__name"]
+        product.pop("category__pk")
+        product.pop("category__name")
+        categorized_products.setdefault(category_name, []).append(product)
+        category_data[category_pk] = category_name
+        # this is to preserve order
+        if category_name not in categories and category_name != "Add-ons":
+            categories.append(category_name)
+    return JsonResponse(
+        {"product_data": categorized_products, "categories": categories, "category_data": category_data}
+    )
+
+
+@login_required
+@user_can_do(permissions=(CAN_ADD_ORDER_PERM,))
+def create_order_v2(request):
+    now = timezone.now()
+    order_data = {}
+
+    if request.method == "POST":
+        ORDER_STATUS_FIXED_TMP = "pa"  # hardcode this for now
+        data = json.loads(request.POST.get("data"))  # same format as currentOrders from frontend
+        order_date = request.POST.get("order_date")
+        order_type = request.POST.get("order_type")
+        payment_type = request.POST.get("payment_type")
+        total = request.POST.get("total")
+
+        year, month, day = map(int, order_date.split("-", 2))
+        order_types_dict = {otype[1]: otype[0] for otype in Order.ORDER_TYPES}
+        payment_type_code = re.findall(r"\([a-z]+\)", payment_type)[0][1:-1]
+        payment_type_obj = PaymentOption.objects.get(code=payment_type_code)
+        unit_prices_dict = dict(Product.objects.values_list("name", "unit_price"))
+        products_dict = {p.name: p for p in Product.objects.all()}
+
+        all_items_saved = True
+        with transaction.atomic():
+            # create order
+            order = Order.objects.create(
+                order_timestamp=now.replace(year=year, month=month, day=day),
+                order_type=order_types_dict.get(order_type),
+                taken_by=request.user,
+                order_status=ORDER_STATUS_FIXED_TMP,
+                paid_by=payment_type_obj,
+            )
+            if not order:
+                raise Exception("An error occurred in saving order data")
+            # save order contents
+            calculated_total = 0
+            for product_name, content in data.items():
+                product_name = product_name.split("|", 1)[0]
+                product = products_dict.get(product_name)
+                qty = int(content.get("qty"))
+                current_price = unit_prices_dict.get(product_name)
+                calculated_total += qty * current_price
+                # save product
+                order_content = OrderContent.objects.create(
+                    order=order, product=product, qty=qty, price_at_order=current_price
+                )
+                if not order_content:
+                    all_items_saved = False
+                    continue  # skip saving add-ons attached to order content if not properly created
+                if add_ons := content.get("add-ons", None):
+                    for add_on_name, add_on_qty in add_ons.items():
+                        add_on = products_dict.get(add_on_name)
+                        current_price = unit_prices_dict.get(add_on_name)
+                        calculated_total += int(add_on_qty) * current_price
+                        saved = AddOn.objects.create(
+                            order_content=order_content,
+                            product=add_on,
+                            qty=int(add_on_qty),
+                            price_at_order=current_price,
+                        )
+                        if not saved:
+                            all_items_saved = False
+                            break  # break out of add-on creation
+            if not all_items_saved:
+                raise Exception("reverting transaction")
+        print(f"calculated_total: {calculated_total}, total: {total}, all_items_saved: {all_items_saved}")
+        if all_items_saved and int(total) == calculated_total:
+            return JsonResponse({"saved": True, "ref": order.pk})
+        return JsonResponse({"saved": False})
+    else:
+        order_form = OrderForm()
+
+    context = {
+        "order_form": order_form,
+        "order_data": order_data,
+        "page": "new-order",
+        "permissions": list(request.user.get_all_permissions()),
+        "username": request.user.username,
+    }
+
+    return render(request, "new_order_v2.html", context)
+
+
+@login_required
+@user_can_do(permissions=(CAN_ADD_ORDER_PERM,))
 def create_order(request):
     PremiumPattiesFS = formset_factory(
         PremiumPattiesOrderContentForm, formset=PremiumPattiesOrderContentFormSet, extra=1
@@ -273,13 +384,12 @@ def create_order(request):
     return render(request, "new_order.html", context)
 
 
-@login_required
-@user_can_do(permissions=(CAN_ADD_ORDER_PERM,))
+# @login_required
+# @user_can_do(permissions=(CAN_ADD_ORDER_PERM,))
 def current_prices(request):
     if request.method == "GET":
-        prices_dict = dict(Product.objects.filter(active=True).values_list("pk", "unit_price"))
-        names_dict = dict(Product.objects.filter(active=True).values_list("pk", "name"))
-        return JsonResponse({"prices": prices_dict, "names": names_dict})
+        prices_dict = dict(Product.objects.filter(active=True).values_list("name", "unit_price"))
+        return JsonResponse(prices_dict)
     return JsonResponse({})
 
 
