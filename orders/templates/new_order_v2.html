@@ -267,12 +267,14 @@
     var categoryOptions = [];
     var productData = null;
     /*
-    currentOrder = {"product-name": {"qty": qty, "add-ons": {"add-on-name": qty, "add-on-name": qty}},
+    currentOrder = {"product-name|#": {"qty": qty, "add-ons": {"add-on-name": qty, "add-on-name": qty}},
                     "product-name": {"qty": qty},
-                    "product-name": {"qty": qty, "add-ons": {"add-on-name": qty, "add-on-name": qty, "add-on-name": qty}},
+                    "product-name|#": {"qty": qty, "add-ons": {"add-on-name": qty, "add-on-name": qty, "add-on-name": qty}},
                     ...}
+    orderCounter = {'product-name': #, 'product-name': #, ...}
     */
     var currentOrder = {};
+    var orderCounter = {};
     // ui moving parts
     var orderDate = $("#id_order_date");
     var orderType = $("#id_order_type");
@@ -301,37 +303,34 @@
         var products = allProducts[category];
         var currentProducts = [];
         for (let p in currentOrder) {
-            currentProducts.push(p);
+            var productNameKey = p;
+            if (p.includes("|")) {  // keys can be 'name-of-product|#'
+                var index_of_pipe = p.indexOf("|");
+                productNameKey = p.substring(0, index_of_pipe);
+            }
+            currentProducts.push(productNameKey);
         }
         var productOptions = [];
         for (let i = 0; i < products.length; i++) {
-            if (currentProducts.includes(products[i]["name"])) {
+            if (currentProducts.includes(products[i]["name"]) && !products[i]["add_on_allowed"]) {
                 continue;
             }
             productOptions.push([products[i]["pk"], products[i]["name"]])
         }
         return productOptions;
     };
-    function getAddOnOptionsForProduct(currentOrder, product, addOnOptions) {
-        // check if product can have add-ons
-        var selectedCategory = getSelectedItem(categoryDropdown)[1];
-        for (let i = 0; i < productData[selectedCategory].length; i++) {
-            var aProduct = productData[selectedCategory][i];
-            if (product == aProduct["name"] && aProduct["add_on_allowed"] == false) {
-                return null;
-            }
-        }
+    function getAddOnOptionsForProduct(currentOrder, productNameKey, addOnOptions) {
         // return all add-on options if there aren't any yet
-        if (currentOrder[product] == undefined || currentOrder[product]["add-ons"] == undefined) {
+        if (currentOrder[productNameKey] == undefined || currentOrder[productNameKey]["add-ons"] == undefined) {
             return addOnOptions;
         }
         var currentAddOns = [];
-        for (let addOn in currentOrder[product]["add-ons"]) {
+        for (let addOn in currentOrder[productNameKey]["add-ons"]) {
             currentAddOns.push(addOn);
         }
         var availableAddOns = [];
         for (let i = 0; i < addOnOptions.length; i++) {
-            let addOnOption = addOnOptions[i];
+            var addOnOption = addOnOptions[i];
             if (currentAddOns.includes(addOnOption[1])) {
                 continue;  // skip this as it has already been selected previously
             }
@@ -373,9 +372,9 @@
                         "Edit" +
                     "</button>";
         }
-        var row = "<tr id='" + data["product"].replaceAll(" ", "-") + "' class='order-row'>" +
+        var row = "<tr product-name-key='" + data["product"] + "' class='order-row'>" +
             "<td>" + data["category"] + "</td>" +
-            "<td>" + data["product"] + "</td>" +
+            "<td>" + data["product"].split("|")[0] + "</td>" +
             "<td>" + data["qty"] + "</td>" +
             "<td>" + 
                 addOns + 
@@ -391,15 +390,16 @@
         if (hasAddOn) {
             ordersList.on("click", "button.edit-add-on", function () {
                 var theRow = $(this).parents(".order-row")[0];
-                var product = $(theRow.children[1]).text();
-                productForAddOn = product;
+                // var product = $(theRow).attr("product-name-key");
+                // productForAddOn = product + "|" + orderCounter[product];
+                productForAddOn = $(theRow).attr("product-name-key");
                 addOnModal.modal("show");
             });
         }
         // attach onclick handler to delete button .delete-item
         ordersList.on("click", "button.delete-item", function () {
             var theRow = $(this).parents(".order-row")[0];
-            var product = $(theRow.children[1]).text();
+            var product = $(theRow).attr("product-name-key");
             delete currentOrder[product];
             $(theRow).remove();
             // re-populate product dropdown
@@ -442,11 +442,12 @@
         var orderContentTable = $("#order-content").find("tbody");
         orderContentTable.empty();
         for (product in currentOrder) {
+            var actualProductName = product.split("|")[0];
             var rowTotal = 0;
             var orderData = currentOrder[product];
             var addOns = orderData["add-ons"];
             // convert addOns to list of dicts because items after the first one
-            // need to be written out in a separate tr
+            // need to be written out in a separate <tr>
             if (addOns != undefined) {
                 addOns = [];
                 for (addOnName in orderData["add-ons"]) {
@@ -454,7 +455,7 @@
                 }
             }
             var qty = orderData["qty"];
-            var productPrice = prices[product];
+            var productPrice = prices[actualProductName];
             var td_tag = "<td class='text-center align-middle'>";
             if (addOns != undefined) {
                 td_tag = "<td rowspan='" + addOns.length + "' class='text-center align-middle'>";
@@ -462,7 +463,7 @@
             var productSubTotal = parseInt(productPrice) * parseInt(qty);
             rowTotal += productSubTotal;
             var tr_str = "<tr>" +
-                    td_tag + product + "</td>" +
+                    td_tag + actualProductName + "</td>" +
                     td_tag + productPrice + "</td>" +
                     td_tag + qty + "</td>" +
                     td_tag + productSubTotal + "</td>";
@@ -508,20 +509,36 @@
         $("#order-info-total").text(total);
     };
     function resetForm() {
-        currentOrder = {}
+        currentOrder = {};
+        orderCounter = {};
         $(categoryDropdown.find("option")[0]).prop("selected", true);
         categoryDropdown.trigger("change");
+        $('#id_order_date').datepicker('setDate', 'today').datepicker("hide");
+        setToFirstOption($("#id_order_type"));
+        setToFirstOption($("#id_payment_option"));
         // empty out orders table
         ordersList.empty();
-        // TODO: reset order date, order type, and payment option
+    };
+    function getProductData(categoryName, productName) {
+        var productsInCategory = productData[categoryName];
+        for (index in productsInCategory) {
+            var product = productsInCategory[index];
+            if (productName == product["name"]) {
+                return product;
+            }
+        }
+        return null;
+    };
+    function setToFirstOption(dropdown) {
+        $(dropdown.find("option")[0]).prop("selected", true);
     };
 
     $(document).ready(function () {
-        // TODO: disable all buttons first
         $("#id_order_date").datepicker({
             dateFormat: "yy-mm-dd",
             showAnim: "fadeIn",
             maxDate: 0,
+            autoclose: true
         });
         // get the current prices of products
         $.ajax({
@@ -584,13 +601,26 @@
                         msgModalBody.text("Quantity cannot be zero.");
                         msgModal.modal("show");
                     } else {
-                        if (currentOrder[selectedProduct] == undefined) {
-                            currentOrder[selectedProduct] = {};
+                        // check if selectedProduct can have add-on
+                        var thisProductData = getProductData(selectedCategory, selectedProduct);
+                        var productNameKey = thisProductData["name"];
+                        if (thisProductData["add_on_allowed"]) {
+                            if (orderCounter[productNameKey] == undefined) {
+                                orderCounter[productNameKey] = 0;
+                            }
+                            orderCounter[productNameKey] += 1
+                            productNameKey = productNameKey + "|" + orderCounter[productNameKey];
                         }
-                        currentOrder[selectedProduct]["qty"] = productQtyVal;
-
-                        var addOnOpts = getAddOnOptionsForProduct(currentOrder, selectedProduct, addOnOptionsMaster);
-                        itemData = {"category": selectedCategory, "product": selectedProduct, "qty": productQtyVal, "add-ons": addOnOpts};
+                        if (currentOrder[productNameKey] == undefined) {
+                            currentOrder[productNameKey] = {};
+                        }
+                        currentOrder[productNameKey]["qty"] = productQtyVal;
+                        
+                        var addOnOpts = null;
+                        if (thisProductData["add_on_allowed"]) {
+                            addOnOpts = getAddOnOptionsForProduct(currentOrder, productNameKey, addOnOptionsMaster);
+                        }
+                        itemData = {"category": selectedCategory, "product": productNameKey, "qty": productQtyVal, "add-ons": addOnOpts};
                         addRowToOrderList(itemData);
                         // re-populate product dropdown minus the one previously added
                         var productOptions = getProductOptionsForCategory(productData, selectedCategory);
@@ -615,7 +645,7 @@
                     // clear error message
                     addOnModal.find("#add-on-msg").empty();
                     // populate header
-                    $(this).find("#add-on-for-product").empty().text(productForAddOn);
+                    $(this).find("#add-on-for-product").empty().text(productForAddOn.split("|")[0]);
                     var addBtn = $(this).find("button.add-add-on");
                     // need to populate table if there are currently picked add-ons, after emptying
                     addOnTable.find("tbody").empty();
@@ -701,7 +731,6 @@
                     $(this).find("#add-on-increase-qty-btn").off("click");
                     $(this).find("#add-on-decrease-qty-btn").off("click");
                 });
-                // TODO: enable all buttons
             },
             error: (error) => {
                 console.log(error);

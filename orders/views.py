@@ -222,6 +222,7 @@ def create_order_v2(request):
             # save order contents
             calculated_total = 0
             for product_name, content in data.items():
+                product_name = product_name.split("|", 1)[0]
                 product = products_dict.get(product_name)
                 qty = int(content.get("qty"))
                 current_price = unit_prices_dict.get(product_name)
