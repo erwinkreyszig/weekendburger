@@ -221,7 +221,7 @@ def create_order(request):
                     for add_on_name, add_on_qty in add_ons.items():
                         add_on = products_dict.get(add_on_name)
                         current_price = unit_prices_dict.get(add_on_name)
-                        calculated_total += int(add_on_qty) * current_price
+                        calculated_total += int(add_on_qty) * current_price * qty
                         saved = AddOn.objects.create(
                             order_content=order_content,
                             product=add_on,

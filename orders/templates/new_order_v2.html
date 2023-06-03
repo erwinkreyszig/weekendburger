@@ -474,15 +474,22 @@
             } else {
                 // add first addOn here
                 var firstAddOn = addOns[0];  // [name, price]
-                var addOnSubtotal = parseInt(firstAddOn[1]) * parseInt(prices[firstAddOn[0]]);
+                // needed to multiply by qty in cases where an item that has a quantity of more than one has an attached
+                // add-on. the quantity of the attached add-on has to be multiplied to the qty of the item because it
+                // means the add-on qty is per item
+                var addOnSubtotal = parseInt(firstAddOn[1]) * parseInt(qty) * parseInt(prices[firstAddOn[0]]);
+                var addOnQtyDisplay = firstAddOn[1];
+                if (qty != "1") {
+                    addOnQtyDisplay += " x " + qty;
+                }
                 tr_str += "<td class='text-center align-middle'>" + firstAddOn[0] + "</td>" + 
                     "<td class='text-center align-middle'>" + prices[firstAddOn[0]] + "</td>" + 
-                    "<td class='text-center align-middle'>" + firstAddOn[1] + "</td>" + 
+                    "<td class='text-center align-middle'>" + addOnQtyDisplay + "</td>" + 
                     "<td class='text-center align-middle'>" + addOnSubtotal + "</td>";
                 // add amounts of addons here
                 for (idx in addOns) {
                     var addOn = addOns[idx];
-                    rowTotal += (parseInt(addOn[1]) * parseInt(prices[addOn[0]]))
+                    rowTotal += (parseInt(addOn[1]) * parseInt(qty) * parseInt(prices[addOn[0]]))
                 }
             }
             tr_str += td_tag + rowTotal + "</td>" +
@@ -494,12 +501,16 @@
                 var theRestOfAddOns = addOns.slice(1);
                 for (idx in theRestOfAddOns) {
                     var subRow = theRestOfAddOns[idx];
-                    var addOnSubtotal = parseInt(subRow[1]) * parseInt(prices[subRow[0]]);
+                    var addOnSubtotal = parseInt(subRow[1]) * parseInt(qty) * parseInt(prices[subRow[0]]);
+                    var addOnQtyDisplay = subRow[1];
+                    if (qty != "1") {
+                        addOnQtyDisplay += " x " + qty;
+                    }
                     rowTotal += addOnSubtotal;
                     var tr_str = "<tr>" +
                             "<td class='text-center align-middle'>" + subRow[0] + "</td>" +
                             "<td class='text-center align-middle'>" + prices[subRow[0]] + "</td>" +
-                            "<td class='text-center align-middle'>" + subRow[1] + "</td>" +
+                            "<td class='text-center align-middle'>" + addOnQtyDisplay + "</td>" +
                             "<td class='text-center align-middle'>" + addOnSubtotal + "</td>" +
                         "</tr>";
                     orderContentTable.append(tr_str);
