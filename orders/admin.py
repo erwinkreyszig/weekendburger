@@ -26,11 +26,19 @@ class ProductAdmin(admin.ModelAdmin):
 class AddOnAdminInline(admin.TabularInline):
     model = AddOn
     extra = 1
+    readonly_fields = ("add_on_pk",)
+
+    def add_on_pk(self, obj):
+        return obj.pk
 
 
-class OrderAdminInline(admin.TabularInline):
+class OrderContentAdminInline(admin.TabularInline):
     model = OrderContent
     extra = 1
+    readonly_fields = ("order_content_pk",)
+
+    def order_content_pk(self, obj):
+        return obj.pk
 
 
 @admin.register(Order)
@@ -51,7 +59,7 @@ class OrderAdmin(admin.ModelAdmin):
         "order_status",
         "paid_by",
     )
-    inlines = [OrderAdminInline]
+    inlines = [OrderContentAdminInline]
 
 
 @admin.register(OrderContent)
