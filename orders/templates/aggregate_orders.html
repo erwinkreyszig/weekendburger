@@ -15,18 +15,22 @@
             <table class="table">
                 <tbody class="table-group-divider">
                     <tr>
-                        <td style="width:30%;">Period  Start:</td>
+                        <td class="fw-bold" style="width:30%;">Period  Start:</td>
                         <td style="width:70%;">{{ fromdate }}</td>
                     </tr>
                     <tr>
-                        <td style="width:30%;">Period  End:</td>
+                        <td class="fw-bold" style="width:30%;">Period  End:</td>
                         <td style="width:70%;">{{ todate }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold" style="width:30%;">Total:</td>
+                        <td style="width:70%;">{{ grand_total }}</td>
                     </tr>
                 </tbody>
             </table>
             <table class="table">
                 <tbody class="table-group-divider">
-                    {% if data %}
+                    {% if data or data_addons %}
                     <tr>
                         <td><strong>Category</strong></td>
                         <td><strong>Product</strong></td>
@@ -43,10 +47,15 @@
                             <td>{{ row.total }}</td>
                         </tr>
                         {% endfor %}
+                        {% for key, row in data_addons.items %}
                         <tr>
-                            <td colspan="4" style="text-align:right;">Total:</td>
-                            <td>{{ grand_total }}</td>
+                            <td>{{ row.category }}</td>
+                            <td>{{ row.product }}</td>
+                            <td>{{ row.qty }}</td>
+                            <td>{{ row.price }}</td>
+                            <td>{{ row.total }}</td>
                         </tr>
+                        {% endfor %}
                     {% else %}
                     <tr>
                         <td colspan="5">There are no orders on the period indicated.</td>

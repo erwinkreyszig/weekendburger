@@ -44,14 +44,14 @@
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-12 justify-content-center">
-                            <button type="submit" class="btn btn-primary" id="updateBtn">
+                            <button type="submit" class="btn btn-primary" id="updateBtn" style="margin: 2px;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                                     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
                                 </svg>
                                 Update
                             </button>
                             {% if "auth.can_view_reports" in permissions %}
-                            <button type="button" class="btn btn-secondary" id="aggregateBtn">
+                            <button type="button" class="btn btn-secondary" id="aggregateBtn" style="margin: 2px;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-ruled-fill" viewBox="0 0 16 16">
                                     <path d="M12 0H4a2 2 0 0 0-2 2v4h12V2a2 2 0 0 0-2-2zm2 7H6v2h8V7zm0 3H6v2h8v-2zm0 3H6v3h6a2 2 0 0 0 2-2v-1zm-9 3v-3H2v1a2 2 0 0 0 2 2h1zm-3-4h3v-2H2v2zm0-3h3V7H2v2z"/>
                                 </svg>
@@ -68,84 +68,15 @@
     </div>
 </div>
 <div class="table-responsive-sm">
-    <table class="table table-hover {% if not orders %}d-none{% endif %}">
-        <tbody class="table-group-divider" id="orders-table">
-            {% for row in orders %}
-            <tr>
-                <td rowspan="2" class="align-middle">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-md-auto mb-1 mb-md-0">
-                                <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ row.pk }}" aria-expanded="false" aria-controls="collapse{{ row.pk }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-fill" viewBox="0 0 16 16">
-                                        <path fill-rule="evenodd" d="M10 1.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1Zm-5 0A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5v1A1.5 1.5 0 0 1 9.5 4h-3A1.5 1.5 0 0 1 5 2.5v-1Zm-2 0h1v1A2.5 2.5 0 0 0 6.5 5h3A2.5 2.5 0 0 0 12 2.5v-1h1a2 2 0 0 1 2 2V14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3.5a2 2 0 0 1 2-2Z"></path>
-                                    </svg>
-                                    #&nbsp;{{ row.pk }}
-                                </button>
-                            </div>
-                            <div class="col-md-6">
-                                {% if "auth.can_view_reports" in permissions or "auth.can_add_orders" in permissions %}
-                                <button type="button" class="btn btn-primary btn-sm printBtn">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
-                                        <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>
-                                        <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>
-                                    </svg>
-                                    Print
-                                </button>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </td>
-                <td><b>Date:</b>&nbsp;{{ row.order_timestamp }}</td>
-                <td><b>Type:</b>&nbsp;{{ row.type }}</td>
-                <td><b>Status:</b>&nbsp;{{ row.status }}</td>
-                <td><b>Taken by:</b>&nbsp;{{ row.user }}</td>
-                <td><b>Payment method:</b>&nbsp;{{ row.payment_method }}</td>
-            </tr>
-            <tr>
-                <td colspan="5">
-                    <div class="collapse" id="collapse{{ row.pk }}">
-                        <div class="card card-body">
-                            <div class="table-responsive-sm">
-                                <table class="table table-sm" id="content-table">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th scope="col">Cateogry</th>
-                                            <th scope="col">Name</th>
-                                            <th scope="col">Price</th>
-                                            <th scope="col">Quantity</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="table-group-divider">
-                                        {% for item in row.contents %}
-                                        <tr>
-                                            <td>{{ item.category }}</td>
-                                            <td>{{ item.name }}</td>
-                                            <td>{{ item.price }}</td>
-                                            <td>{{ item.qty }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                        <tr>
-                                            <td colspan="2" align="right">Total:</td>
-                                            <td colspan="2">{{ row.total }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
+    <table class="table table-hover d-none">
+        <tbody class="table-group-divider" id="orders-table"></tbody>
     </table>
 </div>
 <div class="row" id="pagination">
     <div class="col">
-        <nav aria-label="pagination" class="{% if total_items == 0 %}d-none{% endif %}">
+        <nav aria-label="pagination" class="d-none">
             <ul class="pagination">
-                <li class="page-item {% if page_num == 1 %} disabled {% endif %}">
+                <li class="page-item disabled">
                     <a class="page-link" id="prev_page" href="#">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left-square-fill" viewBox="0 0 16 16">
                             <path d="M16 14a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12zm-4.5-6.5H5.707l2.147-2.146a.5.5 0 1 0-.708-.708l-3 3a.5.5 0 0 0 0 .708l3 3a.5.5 0 0 0 .708-.708L5.707 8.5H11.5a.5.5 0 0 0 0-1z"/>
@@ -153,7 +84,7 @@
                         Previous
                     </a>
                 </li>
-                <li class="page-item {% if page_num == total_pages %} disabled {% endif %}">
+                <li class="page-item disabled">
                     <a class="page-link" id="next_page" href="#">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-square-fill" viewBox="0 0 16 16">
                             <path d="M0 14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2v12zm4.5-6.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5a.5.5 0 0 1 0-1z"/>
@@ -164,11 +95,11 @@
             </ul>
         </nav>
     </div>
-    <div class="col text-start {% if not orders %}d-none{% endif %}">
+    <div class="col text-start d-none">
         <span id="page_indicator">Page {{ page_num }} of {{ total_pages }} ({{ total_items }})</span>
     </div>
 </div>
-<p class="{% if orders %}d-none{% endif %}" id="no_orders_msg">There are no orders on the period indicated.</p>
+<p class="d-none" id="no_orders_msg">There are no orders on the period indicated.</p>
 {% endblock %}
 
 {% block extra_js %}
@@ -201,37 +132,38 @@
         }
     }
     function populateData(data) {
+        console.log(data);
         $("#orders-table").empty();  // clear table contents
-        htmlStr = '';
-        contentHtmlStr = '';
+        var boldPipe = '<span class="fw-bold" style="margin-left: 4px; margin-right: 4px;">|</span>';
+        var multiplySymbol = " ✕ ";
+        var bulletSymbol = "• ";
+        var htmlStr = "";
         for (let j = 0; j < data["orders"].length; j++) {
-            order = data["orders"][j];
-            pk = order["pk"];
-            type = order["type"];
-            status = order["status"];
-            user = order["user"];
-            payment_method = order["payment_method"];
-            order_ts = order["order_timestamp"];
-            total = order["total"];
+            var order = data["orders"][j];
+            var pk = order["pk"];
+            var type = order["type"];
+            var status = order["status"];
+            var user = order["user"];
+            var paymentMethod = order["payment_method"];
+            var orderTs = order["order_timestamp"];
+            var total = order["total"];
             // had trouble with this one. rows were somehow getting added in the inner table that shows the order
             // contents. turns out .find() was getting all child elements that match the selector
             htmlStr = '' +
                 '<tr>' +
-                    '<td rowspan="2" class="align-middle">' +
+                    '<td>' +
                         '<div class="container-fluid">' +
-                            '<div class="row">' + 
-                                '<div class="col-md-auto mb-1 mb-md-0">' +
-                                    '<button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapse' + pk + '" aria-expanded="false" aria-controls="collapse' + pk + '">' +
+                            '<div class="row">' +
+                                '<div class="col-sm">' +
+                                    '<button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapse' + pk + '" aria-expanded="false" aria-controls="collapse' + pk + '" style="margin: 2px;">' +
                                         '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-fill" viewBox="0 0 16 16">' +
                                             '<path fill-rule="evenodd" d="M10 1.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1Zm-5 0A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5v1A1.5 1.5 0 0 1 9.5 4h-3A1.5 1.5 0 0 1 5 2.5v-1Zm-2 0h1v1A2.5 2.5 0 0 0 6.5 5h3A2.5 2.5 0 0 0 12 2.5v-1h1a2 2 0 0 1 2 2V14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3.5a2 2 0 0 1 2-2Z"></path>' +
                                         '</svg>' + 
                                         ' #&nbsp;' + pk +
-                                    '</button>' +
-                                '</div>' +
-                                '<div class="col-md-6">';
+                                    '</button>';
             if (data["permissions"].includes("auth.can_view_reports") || data["permissions"].includes("auth.can_add_orders")) {
                 htmlStr += '' +
-                                    '<button type="button" class="btn btn-primary btn-sm printBtn">' + 
+                                    '<button type="button" class="btn btn-primary btn-sm ml-1 printBtn" style="margin: 2px;" order-pk="' + pk + '">' + 
                                         '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">' + 
                                             '<path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"></path>' + 
                                             '<path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"></path>' +
@@ -241,49 +173,51 @@
             }
             htmlStr += '' +
                                 '</div>' +
+                                '<div class="col-sm">' +
+                                    orderTs + boldPipe + type + 
+                                '</div>' +
+                                '<div class="col-sm">' +
+                                    paymentMethod + boldPipe + status + boldPipe + user + boldPipe + 'Total: ' + total +
+                                '</div>' +
                             '</div>' +
-                        '</div>' +
-                    '</td>' +
-                    '<td><b>Date:</b>&nbsp;' + order_ts + '</td>' +
-                    '<td><b>Type:</b>&nbsp;' + type + '</td>' +
-                    '<td><b>Status:</b>&nbsp;' + status + '</td>' +
-                    '<td><b>Taken by:</b>&nbsp;' + user + '</td>' +
-                    '<td><b>Payment method:</b>&nbsp;' + payment_method + '</td>' +
-                '</tr>' +
-                '<tr>' +
-                    '<td colspan="5">' +
-                        '<div class="collapse" id="collapse' + pk + '">' +
-                            '<div class="card card-body">' +
-                                '<div class="table-responsive-sm">' + 
-                                    '<table class="table table-sm">' +
-                                        '<thead class="table-light">' +
-                                            '<tr>' +
-                                                '<th scope="col">Category</th>' +
-                                                '<th scope="col">Name</th>' +
-                                                '<th scope="col">Price</th>' +
-                                                '<th scope="col">Quantity</th>' +
-                                            '</tr>' +
-                                        '</thead>' +
-                                        '<tbody class="table-group-divider">';
-            contents = order["contents"];
-            contentHtmlStr = '';
-            for (let i = 0; i < contents.length; i++) {
-                content = contents[i];
-                contentHtmlStr += '' +
-                                            '<tr>' +
-                                                '<td>' + content["category"] + '</td>' +
-                                                '<td>' + content["name"] + '</td>' +
-                                                '<td>' + content["price"] + '</td>' +
-                                                '<td>' + content["qty"] + '</td>' +
-                                            '</tr>';
+                            '<div class="row">' +
+                                '<div class="col-sm offset-sm-4">' +
+                                    '<div class="collapse" id="collapse' + pk + '">' +
+                                        '<div class="card card-body">';
+            var contents = order["contents"];
+            for (let k = 0; k < contents.length; k++) {
+                var content = contents[k];
+                var theQty = parseInt(content["qty"]);
+                var itemTotal = parseInt(content["price"]) * theQty;
+                var itemTotalPlusAddOns = itemTotal;
+                var addOns = content["add-ons"];
+                if (addOns != undefined) {
+                    for (let m = 0; m < addOns.length; m++) {
+                        itemTotalPlusAddOns += (parseInt(addOns[m]["price"]) * parseInt(addOns[m]["qty"]) * theQty);
+                    }
+                }
+                htmlStr += '' +
+                                        '<span>' + (k + 1) + boldPipe + content["name"] + boldPipe + content["price"] + multiplySymbol + theQty + ' = ' + itemTotal + boldPipe + 'Subtotal: ' + itemTotalPlusAddOns + '</span>';
+                if (addOns != undefined) {
+                    for (let m = 0; m < addOns.length; m++) {
+                        var addOn = addOns[m];
+                        var addOnQty = addOn["qty"];
+                        var addOnPrice = addOn["price"];
+                        var addOnTotal = addOnPrice * addOnQty;
+                        itemTotal += (addOnTotal * theQty);
+                        var qtyMultiplier = "";
+                        if (theQty != 1) {
+                            qtyMultiplier = ' (' + multiplySymbol + theQty + ')'
+                            addOnTotal *= theQty;
+                        }
+                        htmlStr += '' +
+                                        '<span style="padding-left: 15px;">' + bulletSymbol + addOn["name"] + boldPipe + addOnPrice + multiplySymbol + addOnQty + qtyMultiplier + ' = ' + addOnTotal + '</span>';
+                    }                   
+                }
             }
-            htmlStr += contentHtmlStr +
-                                            '<tr>' +
-                                                '<td colspan="2" align="right">Total:</td>' +
-                                                '<td colspan="2">' + total + '</td>' +
-                                            '</tr>' +
-                                        '</tbody>' +
-                                    '</table>' +
+            htmlStr += '' +
+                                        '</div>' +
+                                    '</div>' +    
                                 '</div>' +
                             '</div>' +
                         '</div>' +
@@ -351,10 +285,11 @@
     }
     function attachOpenNewTabToRows() {
         $("button.printBtn").bind("click", function (event) {
-            pk = $(this).parent().prev().find(".btn").attr("aria-controls").replace("collapse", "");
+            pk = $(this).attr("order-pk");
             window.open("{% url 'print-order' %}".concat(pk)).focus();
         });
     }
+
     $(document).ready(function () {
         hideSpinner();
         // datepickers
@@ -420,6 +355,11 @@
             }
             window.open(url).focus();
         });
+
+        // for initial page load 
+        showSpinner();
+        pullOrders(getFormInput(0), token);
+
         // attach click event to print buttons
         attachOpenNewTabToRows();
     });
