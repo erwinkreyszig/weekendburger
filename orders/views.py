@@ -42,12 +42,9 @@ def order_list(request):
         num_items = int(num_items) if num_items else NUM_ITEMS_DEFAULT
         page_num = int(page_num) if page_num else PAGE_NUM_DEFAULT
 
-    status_whens = []
-    for k, v in Order.ORDER_STATUSES:
-        status_whens.append(When(order_status=k, then=Value(v)))
-    type_whens = []
-    for k, v in Order.ORDER_TYPES:
-        type_whens.append(When(order_type=k, then=Value(v)))
+    status_whens = [When(order_status=k, then=Value(v)) for k, v in Order.ORDER_STATUSES]
+    type_whens = [When(order_type=k, then=Value(v)) for k, v in Order.ORDER_TYPES]
+
     orders = (
         Order.objects.select_related("taken_by", "paid_by")
         .order_by("-order_timestamp")
@@ -81,34 +78,59 @@ def order_list(request):
 
     paginator = Paginator(orders, num_items)
     page_obj = paginator.get_page(page_num)
+
     # change this to a dict with order pk as keys to be able to be populated with order contents
     order_data = {order.get("pk"): order for order in list(page_obj.object_list)}
     category_qs = Category.objects.only("name")
     product_qs = Product.objects.prefetch_related(Prefetch("category", queryset=category_qs)).only(
-        "name", "category__namme"
+        "name", "category__name"
     )
+    order_contents_raw = OrderContent.objects.filter(order_id__in=order_data)
     order_contents = (
-        OrderContent.objects.filter(order_id__in=order_data)
-        .prefetch_related(Prefetch("product", queryset=product_qs))
+        order_contents_raw.prefetch_related(Prefetch("product", queryset=product_qs))
         .annotate(
             name=F("product__name"),
             category=F("product__category__name"),
             price=F("price_at_order"),
+            add_on_allowed=F("product__add_on_allowed"),
         )
-        .values("order_id", "name", "category", "price", "qty")
+        .values("pk", "order_id", "name", "category", "price", "qty", "add_on_allowed")
     )
+
+    add_ons = (
+        AddOn.objects.prefetch_related(Prefetch("product", queryset=Product.objects.only("name")))
+        .filter(order_content_id__in=order_contents_raw.values("pk"))
+        .annotate(name=F("product__name"), price=F("price_at_order"))
+        .values("order_content_id", "name", "qty", "price")
+    )
+    add_ons_dict = {}
+    for add_on in add_ons:
+        add_ons_dict.setdefault(add_on.pop("order_content_id"), []).append(add_on)
+    # add add_ons to order_content
+    for oc in order_contents:
+        oc["add-ons"] = add_ons_dict.get(oc["pk"], None)
+
     for oc in order_contents:
         order_data[oc.pop("order_id")].setdefault("contents", []).append(oc)
 
     # calculate totals
     for inner_dict in order_data.values():
         _total = 0
-        for f, v in inner_dict.items():
-            if f == "contents":
-                _total = sum([r.get("qty") * r.get("price") for r in v])
+        contents = inner_dict.get("contents")
+        for item in contents:
+            price = item.get("price")
+            qty = item.get("qty")
+            _total += price * qty
+            add_ons = item.get("add-ons") if item.get("add-ons") else []
+            for add_on in add_ons:
+                a_price = add_on.get("price")
+                a_qty = add_on.get("qty")
+                a_total = (a_price * a_qty) * qty
+                _total += a_total
         inner_dict["total"] = _total
         total += _total
 
+    # page count
     total_items = orders.count()
     quot, rem = divmod(total_items, num_items)
     total_pages = quot + 1 if rem != 0 else quot
@@ -265,8 +287,7 @@ def current_prices(request):
 def print_order(request, id=None):
     context = {"show": False}
     if id:
-        order = Order.objects.filter(pk=id).first()
-        if order:
+        if order := Order.objects.filter(pk=id).first():
             context["show"] = True
             context["id"] = id
             context["date"] = order.order_timestamp.astimezone(pytz.timezone(TIME_ZONE)).strftime(DATETIME_FORMAT)
@@ -275,12 +296,25 @@ def print_order(request, id=None):
             context["payment_opt"] = order.paid_by.desc
             contents = []
             total = 0
-            for oc in order.ordercontent_set.all():
+            for oc in order.ordercontent_set.prefetch_related("addon_set"):
                 sub_total = oc.qty * oc.price_at_order
                 total += sub_total
-                contents.append(
-                    {"product": oc.product.name, "qty": oc.qty, "price": oc.price_at_order, "subtotal": sub_total}
+                add_ons = list(
+                    oc.addon_set.annotate(
+                        product_name=F("product__name"),
+                        price=F("price_at_order"),
+                        subtotal=F("qty") * F("price_at_order") * F("order_content__qty"),
+                    ).values("product_name", "qty", "price", "subtotal")
                 )
+                oc_dict = {
+                    "product_name": oc.product.name,
+                    "qty": oc.qty,
+                    "price": oc.price_at_order,
+                    "subtotal": sub_total,
+                    "addons": add_ons,
+                }
+                total += sum(add_on["subtotal"] for add_on in add_ons)
+                contents.append(oc_dict)
             context["contents"] = contents
             context["total"] = total
 
@@ -304,16 +338,20 @@ def aggregate_orders(request, fromdate=None, todate=None):
         context["msg"] = "Needs a date for the start of period."
         return render(request, "aggregate_orders.html", context)
     if not todate:
-        todate = fromdate.replace(hour=23, minute=59, second=59)
+        todate = fromdate
+
+    fromdate = fromdate.replace(hour=0, minute=0, second=0)
+    todate = todate.replace(hour=23, minute=59, second=59)
+
     order_pks = Order.objects.filter(
         Q(order_timestamp__gte=timezone.make_aware(fromdate)) & Q(order_timestamp__lte=timezone.make_aware(todate))
     ).values_list("pk", flat=True)
     category_qs = Category.objects.only("name")
-    product__qs = Product.objects.prefetch_related(Prefetch("category", queryset=category_qs)).only(
+    product_qs = Product.objects.prefetch_related(Prefetch("category", queryset=category_qs)).only(
         "category__name", "name"
     )
     contents = (
-        OrderContent.objects.prefetch_related(Prefetch("product", queryset=product__qs))
+        OrderContent.objects.prefetch_related(Prefetch("product", queryset=product_qs))
         .filter(order__pk__in=order_pks)
         .order_by("product__category__name", "product__name")
     )
@@ -334,10 +372,29 @@ def aggregate_orders(request, fromdate=None, todate=None):
         else:
             aggregated[key]["qty"] += item.qty
             aggregated[key]["total"] += subtotal
+    aggregated_addons = {}
+    oc_pks = contents.values("pk")
+    add_ons = AddOn.objects.select_related("order_content").filter(order_content__pk__in=oc_pks)
+    for add_on in add_ons:
+        key = (add_on.product_id, add_on.price_at_order)
+        subtotal = add_on.qty * add_on.price_at_order * add_on.order_content.qty
+        grand_total += subtotal
+        if key not in aggregated_addons:
+            aggregated_addons[key] = {
+                "category": "Add-ons",
+                "product": add_on.product.name,
+                "qty": add_on.qty * add_on.order_content.qty,
+                "price": add_on.price_at_order,
+                "total": subtotal,
+            }
+        else:
+            aggregated_addons[key]["qty"] += add_on.qty * add_on.order_content.qty
+            aggregated_addons[key]["total"] += subtotal
     context["show"] = True
     context["fromdate"] = f'{fromdate.strftime("%b %d, %Y")} 00:00:00'
     context["todate"] = f'{todate.strftime("%b %d, %Y")} 23:59:59'
     context["data"] = aggregated
+    context["data_addons"] = aggregated_addons
     context["grand_total"] = grand_total
 
     return render(request, "aggregate_orders.html", context)
